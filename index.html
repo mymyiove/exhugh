@@ -1,1120 +1,1164 @@
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  QrCode, 
-  Calendar, 
-  FileText, 
-  Bell, 
-  Settings, 
-  LogOut, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Upload, 
-  Camera, 
-  ChevronRight, 
-  RefreshCw,
-  Search,
-  MoreVertical,
-  Plus,
-  Download,
-  ChevronLeft,
-  PieChart,
-  UserPlus,
-  Edit3,
-  Save,
-  Clock,
-  Zap,
-  Sparkles,
-  TrendingUp,
-  MessageSquare,
-  ArrowRight,
-  Menu,
-  Filter,
-  ChevronDown,
-  Monitor
-} from 'lucide-react';
-
-// --- Global Styles (Pretendard & Animations) ---
-const GlobalStyles = () => (
-  <style>{`
-    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shinhan Learning ON</title>
     
-    body {
-      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
-    }
-
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    .glass-card {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(243, 244, 246, 0.6);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'bounce-in': 'bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'translate(-50%, -100%) scale(0.5)', opacity: '0' },
+                            '100%': { transform: 'translate(-50%, 0) scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+        }
     }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .hide-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    <style>
+        /* 기본 스크롤바 숨기기 유틸리티 보완 */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-    .sidebar-transition {
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    <script type="text/babel" data-type="module">
+        import React, { useState } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { 
+            LayoutDashboard, Users, QrCode, Calendar, FileText, Bell, Settings, 
+            LogOut, CheckCircle, XCircle, AlertCircle, Upload, Camera, ChevronRight, 
+            RefreshCw, Search, MoreVertical, Plus, Download, ChevronLeft, PieChart, 
+            UserPlus, Edit3, Save, Clock, Zap, Sparkles, TrendingUp, MessageSquare, 
+            ArrowRight, Menu, Filter, ChevronDown, Monitor 
+        } from 'lucide-react';
 
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0px); }
-    }
-    .animate-float {
-      animation: float 3s ease-in-out infinite;
-    }
+        // --- Global Styles (Pretendard & Animations) ---
+        const GlobalStyles = () => (
+            <style>{`
+                @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+                
+                body {
+                    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+                }
 
-    @keyframes scan-vertical {
-      0% { top: 0; opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { top: 100%; opacity: 0; }
-    }
-    .animate-scan-vertical {
-      animation: scan-vertical 2s linear infinite;
-    }
-    
-    .gradient-text {
-      background: linear-gradient(135deg, #0046FF 0%, #60A5FA 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  `}</style>
-);
+                .glass-effect {
+                    background: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.5);
+                }
+                
+                .glass-card {
+                    background: rgba(255, 255, 255, 0.85);
+                    backdrop-filter: blur(8px);
+                    border: 1px solid rgba(243, 244, 246, 0.6);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+                }
 
-// --- Shared Components ---
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .hide-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
 
-const Card = ({ children, className = "", onClick, glass = false }) => (
-  <div 
-    onClick={onClick} 
-    className={`rounded-2xl transition-all duration-300 ${glass ? 'glass-card' : 'bg-white shadow-sm border border-gray-100'} hover:shadow-lg ${className}`}
-  >
-    {children}
-  </div>
-);
+                .sidebar-transition {
+                    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
 
-const Badge = ({ type, children }) => {
-  const styles = {
-    success: "bg-green-50 text-green-600 border-green-100",
-    warning: "bg-yellow-50 text-yellow-600 border-yellow-100",
-    danger: "bg-red-50 text-red-600 border-red-100",
-    neutral: "bg-gray-50 text-gray-600 border-gray-100",
-    primary: "bg-blue-50 text-blue-600 border-blue-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    brand: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200",
-    dark: "bg-gray-800 text-white border-gray-700"
-  };
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${styles[type] || styles.neutral} flex items-center gap-1.5 w-fit shadow-sm`}>
-      {children}
-    </span>
-  );
-};
+                @keyframes float {
+                    0% { transform: translateY(0px); }
+                    50% { transform: translateY(-5px); }
+                    100% { transform: translateY(0px); }
+                }
+                .animate-float {
+                    animation: float 3s ease-in-out infinite;
+                }
 
-const Button = ({ children, variant = "primary", size = "md", icon: Icon, className = "", onClick }) => {
-  const baseStyle = "rounded-full font-bold transition-all flex items-center justify-center gap-2 active:scale-95 duration-200";
-  const variants = {
-    primary: "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:shadow-lg hover:shadow-blue-200 border border-transparent",
-    secondary: "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100",
-    ghost: "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-  };
-  const sizes = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-5 py-2.5 text-sm",
-    lg: "px-6 py-3.5 text-base"
-  };
+                @keyframes scan-vertical {
+                    0% { top: 0; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                .animate-scan-vertical {
+                    animation: scan-vertical 2s linear infinite;
+                }
+                
+                .gradient-text {
+                    background: linear-gradient(135deg, #0046FF 0%, #60A5FA 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+            `}</style>
+        );
 
-  return (
-    <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`}>
-      {Icon && <Icon size={size === 'sm' ? 14 : 18} strokeWidth={2.5} />}
-      {children}
-    </button>
-  );
-};
+        // --- Shared Components ---
 
-// --- Mock Data ---
-
-const MOCK_COURSES = [
-  { id: 1, title: "2026 디지털 금융 리터러시 심화", status: "progress", date: "2026.10.10 ~ 10.20", students: 42, attendRate: 94 },
-  { id: 2, title: "2026 신임 과장 리더십 역량 강화", status: "upcoming", date: "2026.11.01 ~ 11.03", students: 25, attendRate: 0 },
-  { id: 3, title: "2026 상반기 신입사원 입문 연수", status: "completed", date: "2026.01.05 ~ 02.28", students: 150, attendRate: 99 },
-  { id: 4, title: "2026 데이터 분석 전문가 과정", status: "completed", date: "2026.03.10 ~ 05.20", students: 30, attendRate: 92 },
-];
-
-const MOCK_STUDENTS_FULL = Array.from({ length: 15 }).map((_, i) => ({
-  id: i + 1,
-  name: ["김신한", "이금융", "박투자", "최미래", "정은행", "강디지털", "조데이터", "윤AI", "한클라우드", "오보안", "서블록체인", "남핀테크", "여플랫폼", "장서비스", "임고객"][i],
-  dept: ["디지털전략부", "인사부", "WM사업부", "ICT기획부", "고객만족센터"][i % 5],
-  position: ["대리", "과장", "사원", "차장", "부부장"][i % 5],
-  status: i === 3 ? "absent" : i === 6 ? "late" : "present",
-  time: i === 3 ? "-" : i === 6 ? "09:12:05" : `08:${45 + i}:12`,
-  attendRate: 90 + (i % 10),
-  score: ["S", "A", "A", "C", "B", "A", "B", "S", "A", "B", "A", "S", "A", "C", "B"][i]
-}));
-
-// --- Main Application Wrapper ---
-
-export default function ShinhanLearningOn() {
-  const [viewMode, setViewMode] = useState('admin');
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
-      <GlobalStyles />
-      
-      {/* Dev Tool: Mode Switcher */}
-      <div 
-        className="fixed bottom-6 right-6 z-[9999] bg-gray-900/90 backdrop-blur text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 text-sm font-bold cursor-pointer hover:scale-105 transition-all active:scale-95 border border-white/10"
-        onClick={() => setViewMode(viewMode === 'admin' ? 'user' : 'admin')}
-      >
-        <RefreshCw size={18} className="animate-spin-slow" />
-        <span>{viewMode === 'admin' ? '📱 학습자 모드' : '💻 관리자 모드'}</span>
-      </div>
-
-      {/* Global Toast */}
-      {toast && (
-        <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-2xl shadow-xl text-white font-bold z-[9999] animate-bounce-in flex items-center gap-3 glass-effect border-0 ${toast.type === 'success' ? 'bg-gray-900/90' : 'bg-red-500/90'}`}>
-          {toast.type === 'success' ? <CheckCircle size={20} className="text-green-400" /> : <AlertCircle size={20} />}
-          {toast.message}
-        </div>
-      )}
-
-      {viewMode === 'admin' ? (
-        <AdminSystem showToast={showToast} />
-      ) : (
-        <UserMobileApp showToast={showToast} />
-      )}
-    </div>
-  );
-}
-
-// --- Admin System ---
-
-function AdminSystem({ showToast }) {
-  const [activePage, setActivePage] = useState('dashboard');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); 
-  
-  const renderContent = () => {
-    switch(activePage) {
-      case 'dashboard': return <AdminDashboard onNavigate={setActivePage} />;
-      case 'courses': return <CourseManagement onNavigate={setActivePage} showToast={showToast} />;
-      case 'attendance': return <AttendanceManager showToast={showToast} />;
-      case 'reports': return <PerformanceReports />;
-      default: return <AdminDashboard onNavigate={setActivePage} />;
-    }
-  };
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#F1F5F9]">
-      <aside 
-        className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex flex-col hidden md:flex shrink-0 z-20 sidebar-transition relative`}
-      >
-        <button 
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-sm text-gray-500 hover:text-blue-600 hover:border-blue-200 z-50"
-        >
-          {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
-
-        <div className={`p-6 pb-4 ${isSidebarCollapsed ? 'items-center px-4' : ''} flex flex-col`}>
-          <div className="flex items-center gap-3 text-[#0046FF] font-black text-2xl tracking-tight">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#0046FF] to-[#60A5FA] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200 flex-shrink-0">S</div>
-            {!isSidebarCollapsed && <span className="gradient-text whitespace-nowrap">Learning ON</span>}
-          </div>
-          {!isSidebarCollapsed && <p className="text-[11px] font-bold text-gray-400 mt-2 pl-1 tracking-widest uppercase whitespace-nowrap">Shinhan Financial Group</p>}
-        </div>
-        
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-          <NavItem icon={<LayoutDashboard size={20} />} label="대시보드" active={activePage === 'dashboard'} onClick={() => setActivePage('dashboard')} collapsed={isSidebarCollapsed} />
-          <NavItem icon={<Calendar size={20} />} label="과정 및 학습자" active={activePage === 'courses'} onClick={() => setActivePage('courses')} collapsed={isSidebarCollapsed} />
-          <NavItem icon={<Users size={20} />} label="출결 Live" active={activePage === 'attendance'} onClick={() => setActivePage('attendance')} collapsed={isSidebarCollapsed} />
-          <NavItem icon={<PieChart size={20} />} label="성과 리포트" active={activePage === 'reports'} onClick={() => setActivePage('reports')} collapsed={isSidebarCollapsed} />
-          
-          <div className="pt-8 mt-2">
-             {!isSidebarCollapsed && (
-               <div className="text-[10px] font-extrabold text-gray-400 px-5 mb-3 uppercase tracking-wider flex items-center gap-2">
-                 System <div className="h-px flex-1 bg-gray-100"></div>
-               </div>
-             )}
-             <NavItem icon={<Settings size={20} />} label="설정" collapsed={isSidebarCollapsed} />
-             <NavItem icon={<LogOut size={20} />} label="로그아웃" collapsed={isSidebarCollapsed} />
-          </div>
-        </nav>
-
-        <div className="p-4">
-          <div className={`glass-card p-3 rounded-2xl flex items-center gap-3 hover:scale-[1.02] transition-transform cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold border border-white shadow-sm flex-shrink-0">
-              HR
+        const Card = ({ children, className = "", onClick, glass = false }) => (
+            <div 
+                onClick={onClick} 
+                className={`rounded-2xl transition-all duration-300 ${glass ? 'glass-card' : 'bg-white shadow-sm border border-gray-100'} hover:shadow-lg ${className}`}
+            >
+                {children}
             </div>
-            {!isSidebarCollapsed && (
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-gray-800 truncate">김인사 매니저</p>
-                <p className="text-xs font-medium text-gray-500 truncate">인재개발팀</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
+        );
 
-      <main className="flex-1 overflow-y-auto relative bg-[#F8FAFC]">
-        <header className="h-20 flex items-center justify-between px-8 sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-             {activePage !== 'dashboard' && (
-                <button onClick={() => setActivePage('dashboard')} className="p-2 hover:bg-white rounded-full transition-colors shadow-sm border border-transparent hover:border-gray-100">
-                  <ChevronLeft size={22} className="text-gray-600" />
+        const Badge = ({ type, children, className = "" }) => {
+            const styles = {
+                success: "bg-green-50 text-green-600 border-green-100",
+                warning: "bg-yellow-50 text-yellow-600 border-yellow-100",
+                danger: "bg-red-50 text-red-600 border-red-100",
+                neutral: "bg-gray-50 text-gray-600 border-gray-100",
+                primary: "bg-blue-50 text-blue-600 border-blue-100",
+                purple: "bg-purple-50 text-purple-600 border-purple-100",
+                brand: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200",
+                dark: "bg-gray-800 text-white border-gray-700"
+            };
+            return (
+                <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${styles[type] || styles.neutral} flex items-center gap-1.5 w-fit shadow-sm ${className}`}>
+                {children}
+                </span>
+            );
+        };
+
+        const Button = ({ children, variant = "primary", size = "md", icon: Icon, className = "", onClick }) => {
+            const baseStyle = "rounded-full font-bold transition-all flex items-center justify-center gap-2 active:scale-95 duration-200";
+            const variants = {
+                primary: "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:shadow-lg hover:shadow-blue-200 border border-transparent",
+                secondary: "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300",
+                danger: "bg-red-50 text-red-600 hover:bg-red-100 border border-red-100",
+                ghost: "bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            };
+            const sizes = {
+                sm: "px-3 py-1.5 text-xs",
+                md: "px-5 py-2.5 text-sm",
+                lg: "px-6 py-3.5 text-base"
+            };
+
+            return (
+                <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`}>
+                {Icon && <Icon size={size === 'sm' ? 14 : 18} strokeWidth={2.5} />}
+                {children}
                 </button>
-             )}
-             <div>
-               <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                 {activePage === 'dashboard' && '👋 반가워요, 김인사님!'}
-                 {activePage === 'courses' && '📚 과정 및 학습자 세팅'}
-                 {activePage === 'attendance' && '⚡️ 실시간 출결 관리'}
-                 {activePage === 'reports' && '📊 성과 분석 리포트'}
-               </h2>
-             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative group hidden lg:block">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" size={18} />
-              <input type="text" placeholder="검색어를 입력하세요 (Cmd+K)" className="pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-72 transition-all shadow-sm group-hover:shadow-md" />
-            </div>
-            <button className="p-2.5 bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 rounded-full relative shadow-sm transition-all hover:scale-105">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></span>
-            </button>
-          </div>
-        </header>
+            );
+        };
 
-        <div className="px-8 pb-10 max-w-[1920px] mx-auto min-h-[calc(100vh-5rem)]">
-          {renderContent()}
-        </div>
-      </main>
-    </div>
-  );
-}
+        // --- Mock Data ---
 
-// --- Admin Pages ---
+        const MOCK_COURSES = [
+            { id: 1, title: "2026 디지털 금융 리터러시 심화", status: "progress", date: "2026.10.10 ~ 10.20", students: 42, attendRate: 94 },
+            { id: 2, title: "2026 신임 과장 리더십 역량 강화", status: "upcoming", date: "2026.11.01 ~ 11.03", students: 25, attendRate: 0 },
+            { id: 3, title: "2026 상반기 신입사원 입문 연수", status: "completed", date: "2026.01.05 ~ 02.28", students: 150, attendRate: 99 },
+            { id: 4, title: "2026 데이터 분석 전문가 과정", status: "completed", date: "2026.03.10 ~ 05.20", students: 30, attendRate: 92 },
+        ];
 
-function AdminDashboard({ onNavigate }) {
-  const [courseFilter, setCourseFilter] = useState('all');
+        const MOCK_STUDENTS_FULL = Array.from({ length: 15 }).map((_, i) => ({
+            id: i + 1,
+            name: ["김신한", "이금융", "박투자", "최미래", "정은행", "강디지털", "조데이터", "윤AI", "한클라우드", "오보안", "서블록체인", "남핀테크", "여플랫폼", "장서비스", "임고객"][i],
+            dept: ["디지털전략부", "인사부", "WM사업부", "ICT기획부", "고객만족센터"][i % 5],
+            position: ["대리", "과장", "사원", "차장", "부부장"][i % 5],
+            status: i === 3 ? "absent" : i === 6 ? "late" : "present",
+            time: i === 3 ? "-" : i === 6 ? "09:12:05" : `08:${45 + i}:12`,
+            attendRate: 90 + (i % 10),
+            score: ["S", "A", "A", "C", "B", "A", "B", "S", "A", "B", "A", "S", "A", "C", "B"][i]
+        }));
 
-  const filteredCourses = courseFilter === 'all' 
-    ? MOCK_COURSES 
-    : MOCK_COURSES.filter(c => c.status === courseFilter);
+        // --- Main Application Wrapper ---
 
-  return (
-    <div className="space-y-6 animate-fade-in-up">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <div className="glass-card p-6 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all border border-white/50 relative group">
-          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <select className="bg-gray-50 border border-gray-200 rounded-lg text-[10px] p-1 outline-none text-gray-600 font-bold">
-              <option>10월</option>
-              <option>9월</option>
-              <option>8월</option>
-            </select>
-          </div>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
-              <CheckCircle size={22} strokeWidth={2.5} />
-            </div>
-            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-600">+2.4%</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 flex items-center gap-1">이번 달(10월) 출석률 <ChevronDown size={12}/></p>
-            <h3 className="text-2xl font-black text-gray-800 tracking-tight">94.2%</h3>
-            <p className="text-xs font-medium text-gray-500 mt-2 flex items-center gap-1">전월 대비 상승 🔥</p>
-          </div>
-        </div>
-        
-        <StatCard title="미출결 / 지각" value="5명" sub="오늘 확인 필요 🚨" color="red" icon={<AlertCircle />} trend="New" />
-        <StatCard title="소명 신청" value="3건" sub="신규 접수 📩" color="purple" icon={<MessageSquare />} onClick={() => onNavigate('attendance')} cursor trend="Wait" />
-        <StatCard title="평균 성취도" value="A-" sub="상승세 📈" color="green" icon={<TrendingUp />} trend="Good" />
-      </div>
+        function ShinhanLearningOn() {
+            const [viewMode, setViewMode] = useState('admin');
+            const [toast, setToast] = useState(null);
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-7 glass-card border-none shadow-sm flex flex-col" glass>
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="font-bold text-xl text-gray-800 flex items-center gap-2">전체 과정 운영 현황 📂</h3>
-              <p className="text-sm text-gray-500 mt-1">현재 운영 중이거나 완료된 모든 교육 과정입니다.</p>
-            </div>
-            <div className="bg-gray-100/80 p-1 rounded-xl flex">
-               {['all', 'progress', 'upcoming', 'completed'].map(f => (
-                 <button 
-                  key={f}
-                  onClick={() => setCourseFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${courseFilter === f ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
-                 >
-                   {f === 'all' && '전체'}
-                   {f === 'progress' && '진행중'}
-                   {f === 'upcoming' && '예정'}
-                   {f === 'completed' && '완료'}
-                 </button>
-               ))}
-            </div>
-          </div>
-          
-          <div className="space-y-3 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-            {filteredCourses.map(course => (
-              <div key={course.id} className="group p-5 rounded-2xl bg-white border border-gray-100 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-50 transition-all cursor-pointer relative overflow-hidden" onClick={() => onNavigate('attendance')}>
-                <div className={`flex justify-between items-start mb-3 relative z-10 opacity-${course.status === 'completed' ? '60' : '100'}`}>
-                  <div className="flex gap-3 items-center">
-                    <Badge type={course.status === 'progress' ? 'success' : course.status === 'upcoming' ? 'neutral' : 'dark'}>
-                       {course.status === 'progress' && '진행중 🔥'}
-                       {course.status === 'upcoming' && '예정 🗓️'}
-                       {course.status === 'completed' && '완료 ✅'}
-                    </Badge>
-                    <h4 className={`font-bold text-lg ${course.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-800'} group-hover:text-blue-600 transition-colors`}>{course.title}</h4>
-                  </div>
-                  {course.status === 'progress' && (
-                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                      <ChevronRight size={18} />
-                    </div>
-                  )}
+            const showToast = (message, type = 'success') => {
+                setToast({ message, type });
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            return (
+                <div className="min-h-screen bg-[#F8FAFC] text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+                <GlobalStyles />
+                
+                {/* Dev Tool: Mode Switcher */}
+                <div 
+                    className="fixed bottom-6 right-6 z-[9999] bg-gray-900/90 backdrop-blur text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 text-sm font-bold cursor-pointer hover:scale-105 transition-all active:scale-95 border border-white/10"
+                    onClick={() => setViewMode(viewMode === 'admin' ? 'user' : 'admin')}
+                >
+                    <RefreshCw size={18} className="animate-spin-slow" />
+                    <span>{viewMode === 'admin' ? '📱 학습자 모드' : '💻 관리자 모드'}</span>
                 </div>
-                <div className="flex items-center gap-6 text-sm text-gray-500 mt-4 relative z-10">
-                  <div className="flex items-center gap-2 font-medium bg-gray-50 px-3 py-1.5 rounded-lg"><Calendar size={14} className="text-blue-500"/> {course.date}</div>
-                  <div className="flex items-center gap-2 font-medium bg-gray-50 px-3 py-1.5 rounded-lg"><Users size={14} className="text-purple-500"/> {course.students}명</div>
-                  {course.status !== 'upcoming' && (
-                    <div className="flex-1 ml-4 flex items-center gap-3">
-                      <span className="text-xs font-bold text-gray-400">최종 출석률</span>
-                      <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${course.status === 'completed' ? 'bg-gray-400' : 'bg-gradient-to-r from-blue-500 to-blue-400'}`} style={{width: `${course.attendRate}%`}}></div>
-                      </div>
-                      <span className={`text-sm font-bold ${course.status === 'completed' ? 'text-gray-600' : 'text-blue-600'}`}>{course.attendRate}%</span>
+
+                {/* Global Toast */}
+                {toast && (
+                    <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-2xl shadow-xl text-white font-bold z-[9999] animate-bounce-in flex items-center gap-3 glass-effect border-0 ${toast.type === 'success' ? 'bg-gray-900/90' : 'bg-red-500/90'}`}>
+                    {toast.type === 'success' ? <CheckCircle size={20} className="text-green-400" /> : <AlertCircle size={20} />}
+                    {toast.message}
                     </div>
-                  )}
+                )}
+
+                {viewMode === 'admin' ? (
+                    <AdminSystem showToast={showToast} />
+                ) : (
+                    <UserMobileApp showToast={showToast} />
+                )}
                 </div>
-              </div>
-            ))}
+            );
+        }
+
+        // --- Admin System ---
+
+        function AdminSystem({ showToast }) {
+            const [activePage, setActivePage] = useState('dashboard');
+            const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); 
             
-            <div className="p-5 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all gap-2 group" onClick={() => onNavigate('courses')}>
-              <Plus size={18} />
-              <span className="font-bold text-sm">2026년 신규 과정 개설하기</span>
-            </div>
-          </div>
-        </Card>
+            const renderContent = () => {
+                switch(activePage) {
+                case 'dashboard': return <AdminDashboard onNavigate={setActivePage} />;
+                case 'courses': return <CourseManagement onNavigate={setActivePage} showToast={showToast} />;
+                case 'attendance': return <AttendanceManager showToast={showToast} />;
+                case 'reports': return <PerformanceReports />;
+                default: return <AdminDashboard onNavigate={setActivePage} />;
+                }
+            };
 
-        <Card className="p-7 glass-card border-none shadow-sm flex flex-col h-full" glass>
-          <div className="flex justify-between items-center mb-6">
-             <h3 className="font-bold text-xl text-gray-800">이슈 트래커 ⚡️</h3>
-             <Badge type="danger">3건 대기</Badge>
-          </div>
-          <div className="space-y-3 flex-1">
-             <IssueItem name="최미래" dept="ICT기획부" time="10:15" issue="장기 화면 이탈 (30분)" type="danger" emoji="😴" />
-             <IssueItem name="박투자" dept="WM사업부" time="09:00" issue="지각 사유서 미제출" type="warning" emoji="📝" />
-             <IssueItem name="김신한" dept="디지털전략부" time="11:30" issue="증빙 사진 식별 불가" type="warning" emoji="📷" />
-          </div>
-          <Button className="w-full mt-6 bg-gray-900 text-white hover:bg-gray-800" onClick={() => onNavigate('attendance')}>일괄 처리하기</Button>
-        </Card>
-      </div>
-    </div>
-  );
-}
+            return (
+                <div className="flex h-screen overflow-hidden bg-[#F1F5F9]">
+                <aside 
+                    className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} bg-white/80 backdrop-blur-xl border-r border-gray-200/50 flex flex-col hidden md:flex shrink-0 z-20 sidebar-transition relative`}
+                >
+                    <button 
+                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    className="absolute -right-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-sm text-gray-500 hover:text-blue-600 hover:border-blue-200 z-50"
+                    >
+                    {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                    </button>
 
-function CourseManagement({ showToast, onNavigate }) {
-  const [activeTab, setActiveTab] = useState('list'); 
-
-  return (
-    <div className="space-y-8 animate-fade-in-up">
-      <div className="flex border-b border-gray-200/60 relative">
-        {['list', 'create', 'students'].map((tab) => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)} 
-            className={`px-8 py-4 font-bold text-sm relative transition-colors ${activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            {tab === 'list' && '📂 과정 목록'}
-            {tab === 'create' && '✨ 과정 개설'}
-            {tab === 'students' && '👥 학습자 DB'}
-            {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'list' && (
-        <Card className="p-1 min-h-[400px]">
-           <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                 <h3 className="font-bold text-lg text-gray-800">관리 중인 과정</h3>
-                 <div className="flex gap-2">
-                   <Button size="sm" variant="secondary" icon={Filter}>필터</Button>
-                   <Button size="sm" variant="primary" icon={Plus} onClick={() => setActiveTab('create')}>신규 과정</Button>
-                 </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {MOCK_COURSES.map(course => (
-                  <div key={course.id} className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-md hover:border-blue-200 transition-all text-left group cursor-pointer" onClick={() => onNavigate('attendance')}>
-                    <div>
-                      <div className="flex gap-3 mb-2">
-                        <Badge type={course.status === 'progress' ? 'success' : course.status === 'upcoming' ? 'neutral' : 'dark'}>
-                           {course.status === 'progress' && '진행중'}
-                           {course.status === 'upcoming' && '예정'}
-                           {course.status === 'completed' && '완료'}
-                        </Badge>
-                        <span className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">{course.title}</span>
-                      </div>
-                      <span className="text-sm font-medium text-gray-400 flex items-center gap-2"><Clock size={14}/> {course.date}</span>
+                    <div className={`p-6 pb-4 ${isSidebarCollapsed ? 'items-center px-4' : ''} flex flex-col`}>
+                    <div className="flex items-center gap-3 text-[#0046FF] font-black text-2xl tracking-tight">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#0046FF] to-[#60A5FA] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200 flex-shrink-0">S</div>
+                        {!isSidebarCollapsed && <span className="gradient-text whitespace-nowrap">Learning ON</span>}
                     </div>
-                    <div className="flex gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
-                       <Button size="sm" variant="secondary" icon={Edit3}>수정</Button>
-                       <Button size="sm" variant="primary" icon={Users}>관리</Button>
+                    {!isSidebarCollapsed && <p className="text-[11px] font-bold text-gray-400 mt-2 pl-1 tracking-widest uppercase whitespace-nowrap">Shinhan Financial Group</p>}
                     </div>
-                  </div>
-                ))}
-              </div>
-           </div>
-        </Card>
-      )}
-
-      {activeTab === 'create' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-           <Card className="p-8 space-y-6">
-              <h3 className="font-bold text-xl mb-6 flex items-center gap-2">기본 정보 <span className="text-blue-500 text-sm font-normal">Step 1</span></h3>
-              <div className="space-y-5">
-                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">과정명 🏷️</label>
-                    <input type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="예: 2026 하반기 신입사원 연수" />
-                 </div>
-                 <div className="grid grid-cols-2 gap-5">
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">시작일 🛫</label>
-                        <input type="date" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">종료일 🛬</label>
-                        <input type="date" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium" />
-                    </div>
-                 </div>
-                 <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">교육 방식 📡</label>
-                    <div className="flex gap-3 mt-1">
-                       {['대면 (Offline)', '비대면 (Zoom)', '하이브리드'].map((type, i) => (
-                         <label key={i} className="flex-1 cursor-pointer">
-                           <input type="radio" name="type" className="peer sr-only" defaultChecked={i===2} />
-                           <div className="w-full text-center py-3 rounded-xl border-2 border-gray-100 text-gray-500 font-bold text-sm peer-checked:border-blue-500 peer-checked:text-blue-600 peer-checked:bg-blue-50 transition-all">
-                             {type}
-                           </div>
-                         </label>
-                       ))}
-                    </div>
-                 </div>
-              </div>
-           </Card>
-           
-           <Card className="p-8 flex flex-col justify-between relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
-              <div className="relative z-10">
-                <h3 className="font-bold text-xl mb-6 flex items-center gap-2">학습자 세팅 <span className="text-blue-500 text-sm font-normal">Step 2</span></h3>
-                <div className="border-3 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-gray-50/50 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer group h-64">
-                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg shadow-gray-100 mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                      <FileText className="text-gray-400 group-hover:text-blue-500" size={32} />
-                   </div>
-                   <p className="font-bold text-lg text-gray-700">명단 일괄 업로드</p>
-                   <p className="text-sm text-gray-400 mt-2 font-medium">엑셀 파일(.xlsx)을 여기로 끌어오세요.</p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 mt-8 relative z-10">
-                 <Button variant="secondary" className="px-8">취소</Button>
-                 <Button className="px-8 shadow-lg shadow-blue-300/50" onClick={() => {showToast("2026년 신규 과정이 개설되었습니다! 🎉"); setActiveTab('list');}}>과정 생성 완료</Button>
-              </div>
-           </Card>
-        </div>
-      )}
-
-      {activeTab === 'students' && (
-         <Card className="p-0 overflow-hidden border-0 shadow-sm">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
-               <div className="flex items-center gap-3">
-                  <h3 className="font-bold text-lg text-gray-800">2026년 학습자 DB</h3>
-                  <Badge type="neutral">총 15명</Badge>
-               </div>
-               <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" icon={Upload}>엑셀 업로드</Button>
-                  <Button size="sm" variant="primary" icon={UserPlus}>개별 등록</Button>
-               </div>
-            </div>
-            <div className="overflow-x-auto">
-               <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                     <tr>
-                        <th className="px-6 py-4 rounded-tl-lg">사번</th>
-                        <th className="px-6 py-4">이름</th>
-                        <th className="px-6 py-4">부서/직급</th>
-                        <th className="px-6 py-4">최근 이수 과정</th>
-                        <th className="px-6 py-4 text-center rounded-tr-lg">관리</th>
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 bg-white">
-                     {MOCK_STUDENTS_FULL.slice(0, 5).map(s => (
-                        <tr key={s.id} className="hover:bg-blue-50/30 transition-colors">
-                           <td className="px-6 py-4 text-gray-500 font-mono">202600{s.id}</td>
-                           <td className="px-6 py-4 font-bold text-gray-800">{s.name}</td>
-                           <td className="px-6 py-4 text-gray-500 font-medium"><Badge type="neutral">{s.dept}</Badge></td>
-                           <td className="px-6 py-4 text-gray-600 font-medium">2026 디지털 금융 리터러시</td>
-                           <td className="px-6 py-4 text-center">
-                              <button className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-all"><Edit3 size={16}/></button>
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </div>
-         </Card>
-      )}
-    </div>
-  );
-}
-
-function AttendanceManager({ showToast }) {
-  const [mode, setMode] = useState('online');
-  const [selectedStudent, setSelectedStudent] = useState(null);
-
-  return (
-    <div className="space-y-8 animate-fade-in-up">
-      {/* Hip Control Bar */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-         <div className="flex items-center gap-6">
-            <div className="bg-gray-100 p-1.5 rounded-xl flex shadow-inner">
-               <button onClick={() => setMode('online')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${mode === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Monitor size={16}/> 비대면</button>
-               <button onClick={() => setMode('offline')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${mode === 'offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><QrCode size={16}/> 대면</button>
-            </div>
-            <div className="h-10 w-px bg-gray-100"></div>
-            <div>
-               <span className="text-xs font-bold text-blue-500 block mb-1">CURRENT CLASS</span>
-               <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-gray-800 tracking-tight">2026 디지털 금융 리터러시 심화</span>
-                  <div className="animate-pulse w-2 h-2 rounded-full bg-green-500"></div>
-               </div>
-            </div>
-         </div>
-         <div className="flex gap-3">
-            <Button variant="secondary" size="md" icon={Download}>출석부</Button>
-            <Button variant="primary" size="md" icon={Save}>마감 확정</Button>
-         </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* Main List */}
-         <Card className="lg:col-span-2 p-0 flex flex-col h-[650px] border-0 shadow-sm">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-2xl">
-               <h3 className="font-bold text-gray-800 flex items-center gap-2"><Sparkles size={16} className="text-yellow-500"/> 실시간 학습자 현황</h3>
-               <div className="flex gap-3 text-xs font-bold">
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full"><div className="w-2 h-2 rounded-full bg-green-500"></div>출석 12</span>
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full"><div className="w-2 h-2 rounded-full bg-yellow-500"></div>지각 1</span>
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-full"><div className="w-2 h-2 rounded-full bg-red-500"></div>결석 1</span>
-               </div>
-            </div>
-            <div className="flex-1 overflow-y-auto bg-white rounded-b-2xl">
-               <table className="w-full text-sm text-left sticky top-0">
-                  <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase sticky top-0 z-10">
-                     <tr>
-                        <th className="px-6 py-3">이름/소속</th>
-                        <th className="px-6 py-3">인증 시간</th>
-                        <th className="px-6 py-3">상태</th>
-                        <th className="px-6 py-3 text-center">Action</th>
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                     {MOCK_STUDENTS_FULL.map((s) => (
-                        <tr key={s.id} className="hover:bg-blue-50/40 cursor-pointer transition-colors group" onClick={() => setSelectedStudent(s)}>
-                           <td className="px-6 py-4">
-                              <div className="font-bold text-gray-900 flex items-center gap-2">
-                                {s.name}
-                                {s.status === 'late' && <span className="text-[10px] bg-gray-100 px-1.5 rounded text-gray-500">사유서 미제출</span>}
-                              </div>
-                              <div className="text-xs font-medium text-gray-400 mt-0.5">{s.dept}</div>
-                           </td>
-                           <td className="px-6 py-4 font-mono font-medium text-gray-600">{s.time}</td>
-                           <td className="px-6 py-4">
-                              <Badge type={s.status === 'present' ? 'success' : s.status === 'late' ? 'warning' : 'danger'}>
-                                 {s.status === 'present' ? '출석' : s.status === 'late' ? '지각' : '결석'}
-                              </Badge>
-                           </td>
-                           <td className="px-6 py-4 text-center">
-                              <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                 <button onClick={(e)=>{e.stopPropagation(); showToast(`✅ ${s.name}님 출석 처리 완료`);}} className="p-1.5 hover:bg-green-100 text-green-600 rounded-lg transition-colors"><CheckCircle size={18}/></button>
-                                 <button onClick={(e)=>{e.stopPropagation(); showToast(`🚨 ${s.name}님 결석 처리 완료`, 'error');}} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition-colors"><XCircle size={18}/></button>
-                              </div>
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </div>
-         </Card>
-
-         {/* Side Panel */}
-         <div className="space-y-6">
-            <Card className="p-8 bg-gradient-to-br from-white to-blue-50/50 border-white shadow-lg text-center relative overflow-hidden" glass>
-               {mode === 'offline' ? (
-                  <>
-                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-                     <Badge type="brand" className="mx-auto mb-4">Dynamic QR Live</Badge>
-                     <h3 className="font-bold text-xl text-gray-800 mb-2">출석 스캔해주세요 📸</h3>
-                     <p className="text-xs font-medium text-gray-500 mb-6">코드는 10초마다 자동 갱신됩니다.</p>
-                     <div className="bg-white p-4 rounded-2xl shadow-xl border border-gray-100 inline-block relative overflow-hidden group hover:scale-105 transition-transform duration-500">
-                        <QrCode size={160} className="text-gray-900" />
-                        <div className="absolute top-0 left-0 w-full h-2 bg-blue-500/50 blur-sm animate-scan"></div>
-                     </div>
-                     <div className="mt-6 flex justify-center items-center gap-2 bg-white/50 py-2 rounded-full w-fit mx-auto px-4 backdrop-blur-sm">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                        <span className="text-xs font-bold text-green-600">실시간 활성화됨</span>
-                     </div>
-                  </>
-               ) : (
-                  <>
-                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
-                       <Upload className="text-blue-600" size={28}/>
-                     </div>
-                     <h3 className="font-bold text-xl text-gray-800 mb-2">증빙 캡처 업로드 ☁️</h3>
-                     <p className="text-xs font-medium text-gray-400 mb-6">Zoom 화면을 캡처해서 올려주세요.</p>
-                     <div className="border-3 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl h-40 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group" onClick={() => showToast("이미지가 업로드 되었습니다! 📤")}>
-                        <span className="text-sm font-bold text-gray-600 group-hover:text-blue-600">이미지 Drag & Drop</span>
-                        <span className="text-[10px] text-blue-400 mt-2 font-medium bg-white px-2 py-1 rounded-full shadow-sm">Auto Timestamp</span>
-                     </div>
-                  </>
-               )}
-            </Card>
-
-            {/* Student Detail Modal */}
-            {selectedStudent ? (
-               <Card className="p-6 border-l-4 border-l-blue-500 animate-slide-up shadow-lg">
-                  <div className="flex justify-between items-start mb-6">
-                     <div className="flex gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl">👤</div>
-                        <div>
-                           <h4 className="font-bold text-lg text-gray-900">{selectedStudent.name}</h4>
-                           <p className="text-xs font-medium text-gray-500">{selectedStudent.dept} {selectedStudent.position}</p>
+                    
+                    <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+                    <NavItem icon={<LayoutDashboard size={20} />} label="대시보드" active={activePage === 'dashboard'} onClick={() => setActivePage('dashboard')} collapsed={isSidebarCollapsed} />
+                    <NavItem icon={<Calendar size={20} />} label="과정 및 학습자" active={activePage === 'courses'} onClick={() => setActivePage('courses')} collapsed={isSidebarCollapsed} />
+                    <NavItem icon={<Users size={20} />} label="출결 Live" active={activePage === 'attendance'} onClick={() => setActivePage('attendance')} collapsed={isSidebarCollapsed} />
+                    <NavItem icon={<PieChart size={20} />} label="성과 리포트" active={activePage === 'reports'} onClick={() => setActivePage('reports')} collapsed={isSidebarCollapsed} />
+                    
+                    <div className="pt-8 mt-2">
+                        {!isSidebarCollapsed && (
+                        <div className="text-[10px] font-extrabold text-gray-400 px-5 mb-3 uppercase tracking-wider flex items-center gap-2">
+                            System <div className="h-px flex-1 bg-gray-100"></div>
                         </div>
-                     </div>
-                     <button onClick={() => setSelectedStudent(null)} className="p-1 hover:bg-gray-100 rounded-full"><XCircle size={20} className="text-gray-400"/></button>
-                  </div>
-                  <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
-                     <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 font-medium">입실 시간</span>
-                        <span className="font-mono font-bold">{selectedStudent.time}</span>
-                     </div>
-                     <div className="flex justify-between text-sm items-center">
-                        <span className="text-gray-500 font-medium">현재 상태</span>
-                        <Badge type={selectedStudent.status === 'present' ? 'success' : selectedStudent.status === 'late' ? 'warning' : 'danger'}>
-                           {selectedStudent.status === 'present' ? '정상 출석' : selectedStudent.status === 'late' ? '지각' : '결석'}
-                        </Badge>
-                     </div>
-                  </div>
-                  <div className="mt-4">
-                     <label className="block text-xs font-bold text-gray-700 mb-2">관리자 메모 ✏️</label>
-                     <textarea className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs font-medium h-20 resize-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none" placeholder="특이사항을 입력하세요..."></textarea>
-                     <Button size="sm" className="w-full mt-3 font-bold" onClick={() => {showToast("저장되었습니다 ✨"); setSelectedStudent(null);}}>저장하기</Button>
-                  </div>
-               </Card>
-            ) : (
-               <Card className="p-8 text-center text-gray-400 py-16 border-2 border-dashed border-gray-200 bg-gray-50/50">
-                  <p className="text-sm font-medium">👈 리스트에서 학습자를 선택하면<br/>상세 정보가 표시됩니다.</p>
-               </Card>
-            )}
-         </div>
-      </div>
-    </div>
-  );
-}
-
-function PerformanceReports() {
-  return (
-    <div className="space-y-8 animate-fade-in-up">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="p-8">
-             <h3 className="font-bold text-xl mb-6 flex items-center gap-2">종합 성취도 분포 📊</h3>
-             <div className="flex items-end justify-center h-48 gap-6 px-10">
-                <div className="w-16 bg-blue-100 h-[20%] rounded-t-2xl relative group hover:bg-blue-200 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-500">C</span></div>
-                <div className="w-16 bg-blue-300 h-[45%] rounded-t-2xl relative group hover:bg-blue-400 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-500">B</span></div>
-                <div className="w-16 bg-blue-500 h-[70%] rounded-t-2xl relative group hover:bg-blue-600 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-blue-600">A</span></div>
-                <div className="w-16 bg-gray-800 h-[30%] rounded-t-2xl relative group hover:bg-gray-700 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-800">S</span></div>
-             </div>
-             <p className="text-center text-sm font-bold text-gray-500 mt-6 bg-gray-50 py-2 rounded-lg">전체 평균 <span className="text-blue-600">B+ 이상</span> 달성 중입니다 👍</p>
-          </Card>
-          <Card className="p-8 flex flex-col">
-             <h3 className="font-bold text-xl mb-6">주요 인사이트 💡</h3>
-             <div className="space-y-4 flex-1">
-               <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex gap-3 items-start">
-                  <div className="p-1 bg-green-200 rounded-full"><TrendingUp size={14} className="text-green-700"/></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-green-800">출석률 상승</h4>
-                    <p className="text-xs text-green-700 mt-1">지난 기수 대비 출석률이 5.2% 상승했습니다.</p>
-                  </div>
-               </div>
-               <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 items-start">
-                  <div className="p-1 bg-blue-200 rounded-full"><Zap size={14} className="text-blue-700"/></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-blue-800">디지털 역량 강화</h4>
-                    <p className="text-xs text-blue-700 mt-1">데이터 분석 과제 평균 점수가 A등급입니다.</p>
-                  </div>
-               </div>
-             </div>
-          </Card>
-       </div>
-
-       <Card className="p-0 border-0 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
-             <h3 className="font-bold text-lg text-gray-800">2026년 개별 성과 리포트</h3>
-             <Button size="sm" variant="secondary" icon={Download}>엑셀 다운로드</Button>
-          </div>
-          <div className="overflow-x-auto bg-white">
-             <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase">
-                   <tr>
-                      <th className="px-6 py-4">Ranking</th>
-                      <th className="px-6 py-4">학습자</th>
-                      <th className="px-6 py-4">출석률 (40%)</th>
-                      <th className="px-6 py-4">과제 (30%)</th>
-                      <th className="px-6 py-4">시험 (30%)</th>
-                      <th className="px-6 py-4">Final Grade</th>
-                      <th className="px-6 py-4 text-center">Detail</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                   {MOCK_STUDENTS_FULL.slice(0, 8).map((s, i) => (
-                      <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                         <td className="px-6 py-4 font-mono font-bold text-gray-400">{i+1}</td>
-                         <td className="px-6 py-4 font-bold text-gray-800">{s.name} <span className="text-xs text-gray-400 font-normal">({s.dept})</span></td>
-                         <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-16 bg-gray-100 rounded-full h-2 overflow-hidden">
-                                <div className="bg-blue-500 h-full rounded-full" style={{width: `${s.attendRate}%`}}></div>
-                              </div>
-                              <span className="font-mono text-xs font-bold">{s.attendRate}%</span>
-                            </div>
-                         </td>
-                         <td className="px-6 py-4 font-medium text-gray-600">92점</td>
-                         <td className="px-6 py-4 font-medium text-gray-600">88점</td>
-                         <td className="px-6 py-4"><Badge type={s.score === 'S' ? 'brand' : s.score === 'A' ? 'primary' : 'neutral'}>{s.score} 등급</Badge></td>
-                         <td className="px-6 py-4 text-center">
-                            <button className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-all"><FileText size={18}/></button>
-                         </td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
-       </Card>
-    </div>
-  );
-}
-
-// --- User Mobile App (Unchanged) ---
-function UserMobileApp({ showToast }) {
-  const [activeTab, setActiveTab] = useState('home');
-  const [isScanning, setIsScanning] = useState(false);
-  const [showAppealModal, setShowAppealModal] = useState(false);
-
-  const handleScan = () => {
-    setIsScanning(true);
-    setTimeout(() => {
-      setIsScanning(false);
-      showToast("출석 인증 성공! 🔥", "success");
-    }, 2000);
-  };
-
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-[#E5E5E5] py-8 font-sans selection:bg-blue-500 selection:text-white">
-      {/* Mobile Frame - iPhone 15 Style */}
-      <div className="bg-[#F2F4F6] w-[400px] h-[860px] rounded-[55px] shadow-2xl border-[12px] border-black relative overflow-hidden flex flex-col ring-8 ring-gray-300/50">
-        
-        {/* Dynamic Island Area */}
-        <div className="absolute top-0 w-full h-14 z-50 flex justify-between items-center px-8 pt-4 text-sm font-bold text-gray-900">
-           <span>09:41</span>
-           <div className="w-[120px] h-[36px] bg-black rounded-full absolute left-1/2 transform -translate-x-1/2 top-[11px] flex items-center justify-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-[10px] text-white font-medium">Live Activity</span>
-           </div>
-           <div className="flex gap-1.5">
-              <div className="w-5 h-3 bg-gray-900 rounded-[2px]"></div>
-              <div className="w-0.5 h-1.5 bg-gray-900 absolute right-[28px] top-[20px]"></div>
-           </div>
-        </div>
-
-        {/* Dynamic Content */}
-        <div className="flex-1 overflow-y-auto pb-24 pt-16 scrollbar-hide">
-          {activeTab === 'home' ? (
-             <UserHome handleScan={handleScan} />
-          ) : (
-             <UserHistory setShowAppealModal={setShowAppealModal} />
-          )}
-        </div>
-
-        {/* Glass Bottom Navigation */}
-        <div className="absolute bottom-6 left-6 right-6 h-[80px] bg-white/90 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-gray-200/50 flex justify-around items-center px-2 z-40 border border-white/50">
-           <NavIcon icon={<LayoutDashboard />} label="홈" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-           <div className="relative -top-8 group">
-             <button 
-               onClick={handleScan}
-               className="w-16 h-16 bg-gray-900 rounded-[24px] flex items-center justify-center text-white shadow-xl shadow-gray-400/50 hover:scale-110 hover:shadow-2xl transition-all duration-300 active:scale-95 group-hover:bg-[#0046FF]">
-               <QrCode size={28} />
-             </button>
-           </div>
-           <NavIcon icon={<FileText />} label="내 기록" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
-        </div>
-
-        {/* Scan Overlay */}
-        {isScanning && (
-          <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center text-white animate-fade-in backdrop-blur-sm">
-             <div className="w-72 h-72 border-[3px] border-[#0046FF] rounded-[40px] relative flex items-center justify-center overflow-hidden bg-white/5 shadow-[0_0_50px_rgba(0,70,255,0.3)]">
-               <div className="w-full h-1.5 bg-gradient-to-r from-transparent via-[#0046FF] to-transparent absolute top-0 animate-scan-vertical shadow-[0_0_20px_#0046FF]"></div>
-               <Camera size={64} className="text-white/20" />
-               <div className="absolute bottom-6 text-xs font-mono text-blue-300 bg-blue-900/30 px-3 py-1 rounded-full">DETECTING QR...</div>
-             </div>
-             <p className="mt-10 font-bold text-lg animate-pulse flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> QR 코드를 찾는 중...</p>
-             <button onClick={() => setIsScanning(false)} className="mt-8 px-8 py-3 rounded-full bg-white/10 text-sm font-bold hover:bg-white/20 transition-colors">취소</button>
-          </div>
-        )}
-
-        {/* Appeal Modal */}
-        {showAppealModal && (
-           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end animate-fade-in">
-              <div className="bg-[#F2F4F6] w-full rounded-t-[40px] p-8 pb-12 animate-slide-up shadow-2xl">
-                 <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-8"></div>
-                 <h3 className="font-bold text-2xl mb-6 text-gray-900">소명 신청 📝</h3>
-                 <div className="space-y-5">
-                    <div className="bg-white p-4 rounded-2xl border border-gray-100">
-                       <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Date</label>
-                       <div className="font-bold text-gray-800">2026.10.12 (지각)</div>
+                        )}
+                        <NavItem icon={<Settings size={20} />} label="설정" collapsed={isSidebarCollapsed} />
+                        <NavItem icon={<LogOut size={20} />} label="로그아웃" collapsed={isSidebarCollapsed} />
                     </div>
-                    <div>
-                       <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Reason</label>
-                       <select className="w-full border-none bg-white rounded-2xl p-4 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 shadow-sm">
-                          <option>🚌 대중교통 지연</option>
-                          <option>🏥 병원 진료</option>
-                          <option>💍 경조사</option>
-                          <option>✏️ 기타 (직접 입력)</option>
-                       </select>
+                    </nav>
+
+                    <div className="p-4">
+                    <div className={`glass-card p-3 rounded-2xl flex items-center gap-3 hover:scale-[1.02] transition-transform cursor-pointer ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold border border-white shadow-sm flex-shrink-0">
+                        HR
+                        </div>
+                        {!isSidebarCollapsed && (
+                        <div className="min-w-0">
+                            <p className="text-sm font-bold text-gray-800 truncate">김인사 매니저</p>
+                            <p className="text-xs font-medium text-gray-500 truncate">인재개발팀</p>
+                        </div>
+                        )}
                     </div>
-                    <div>
-                       <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Photo Evidence</label>
-                       <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center text-gray-400 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                          <Camera className="mx-auto mb-2 text-gray-300" size={32} />
-                          <span className="text-xs font-bold">터치하여 사진 업로드</span>
-                       </div>
                     </div>
-                    <Button className="w-full h-14 mt-4 text-lg shadow-lg shadow-blue-200" onClick={() => {showToast("신청이 접수되었습니다! ✅"); setShowAppealModal(false);}}>제출하기</Button>
-                 </div>
-              </div>
-           </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                </aside>
 
-function UserHome({ handleScan }) {
-  return (
-    <div className="px-7 space-y-8">
-      <div className="flex justify-between items-center mt-2">
-        <div>
-          <p className="text-gray-500 font-bold text-sm mb-0.5">Welcome back,</p>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">Kim Shinhan <span className="text-2xl">👋</span></h2>
-        </div>
-        <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px] rounded-full shadow-lg shadow-blue-200">
-           <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-             <span className="font-black text-xl gradient-text">K</span>
-           </div>
-        </div>
-      </div>
+                <main className="flex-1 overflow-y-auto relative bg-[#F8FAFC]">
+                    <header className="h-20 flex items-center justify-between px-8 sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        {activePage !== 'dashboard' && (
+                            <button onClick={() => setActivePage('dashboard')} className="p-2 hover:bg-white rounded-full transition-colors shadow-sm border border-transparent hover:border-gray-100">
+                            <ChevronLeft size={22} className="text-gray-600" />
+                            </button>
+                        )}
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                            {activePage === 'dashboard' && '👋 반가워요, 김인사님!'}
+                            {activePage === 'courses' && '📚 과정 및 학습자 세팅'}
+                            {activePage === 'attendance' && '⚡️ 실시간 출결 관리'}
+                            {activePage === 'reports' && '📊 성과 분석 리포트'}
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="relative group hidden lg:block">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" size={18} />
+                        <input type="text" placeholder="검색어를 입력하세요 (Cmd+K)" className="pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-72 transition-all shadow-sm group-hover:shadow-md" />
+                        </div>
+                        <button className="p-2.5 bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 rounded-full relative shadow-sm transition-all hover:scale-105">
+                        <Bell size={20} />
+                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></span>
+                        </button>
+                    </div>
+                    </header>
 
-      <div className="bg-white p-6 rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-white">
-        <div className="flex justify-between items-center mb-6">
-           <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">MY STATUS <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div></h3>
-           <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">2026 OCT</span>
-        </div>
-        <div className="flex justify-between items-start gap-2">
-           <StatusItem value="95%" label="Attendance" color="green" icon={<CheckCircle size={16}/>} />
-           <div className="w-px h-12 bg-gray-100 self-center"></div>
-           <StatusItem value="1건" label="To-Do" color="yellow" icon={<AlertCircle size={16}/>} />
-           <div className="w-px h-12 bg-gray-100 self-center"></div>
-           <StatusItem value="A" label="Grade" color="blue" icon={<TrendingUp size={16}/>} />
-        </div>
-      </div>
-
-      <div className="relative group cursor-pointer" onClick={handleScan}>
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[32px] blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-        <div className="relative bg-[#0F172A] p-7 rounded-[32px] text-white shadow-2xl overflow-hidden border border-white/10">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
-          
-          <div className="flex justify-between items-start mb-6 relative z-10">
-             <Badge type="neutral" className="bg-white/10 text-white border-0 backdrop-blur-md">TODAY</Badge>
-             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md"><MoreVertical size={16}/></div>
-          </div>
-          
-          <h2 className="text-2xl font-black leading-tight mb-8 relative z-10">2026 디지털 금융<br/>리터러시 심화 <span className="text-blue-400">3차시</span></h2>
-          
-          <div className="space-y-3 relative z-10">
-             <div className="flex items-center gap-3 text-sm font-medium text-gray-300">
-               <div className="p-2 bg-white/5 rounded-xl"><Clock size={16} className="text-blue-400"/></div>
-               <span>14:00 ~ 18:00 (4H)</span>
-             </div>
-             <div className="flex items-center gap-3 text-sm font-medium text-gray-300">
-               <div className="p-2 bg-white/5 rounded-xl"><Users size={16} className="text-purple-400"/></div>
-               <span>신한은행 본점 20층 대강당</span>
-             </div>
-          </div>
-
-          <div className="absolute bottom-6 right-6 w-12 h-12 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
-             <ArrowRight size={20} />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100">
-         <div className="bg-red-50 p-2.5 rounded-xl text-red-500">
-            <Bell size={18} />
-         </div>
-         <div className="flex-1">
-            <p className="text-sm font-bold text-gray-800">내일 사전 과제 마감 🚨</p>
-            <p className="text-xs text-gray-400 truncate">리더십 역량 강화 과정 - 자기소개서 제출</p>
-         </div>
-         <ChevronRight size={16} className="text-gray-300" />
-      </div>
-    </div>
-  );
-}
-
-function UserHistory({ setShowAppealModal }) {
-  const history = [
-    { date: "10.14", title: "디지털 리터러시 (3차)", status: "present", time: "13:55" },
-    { date: "10.13", title: "금융 데이터 분석 (2차)", status: "present", time: "08:50" },
-    { date: "10.12", title: "리더십 역량 강화", status: "late", time: "09:40" },
-    { date: "10.10", title: "경영 전략 워크샵", status: "absent", time: "-" },
-  ];
-
-  return (
-    <div className="px-7 space-y-6">
-      <h2 className="font-black text-2xl text-gray-900">History 🗓️</h2>
-      <div className="space-y-4">
-        {history.map((item, i) => (
-          <div key={i} className="bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm flex items-center justify-between group active:scale-95 transition-all hover:shadow-md">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-gray-50 rounded-2xl flex flex-col items-center justify-center border border-gray-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
-                <span className="text-[10px] text-gray-400 font-bold uppercase">{item.date.split('.')[0]} OCT</span>
-                <span className="font-black text-gray-800 text-xl leading-none">{item.date.split('.')[1]}</span>
-              </div>
-              <div>
-                <h4 className="font-bold text-sm text-gray-800 mb-1">{item.title}</h4>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
-                   <Clock size={12}/> {item.time === '-' ? '기록 없음' : `${item.time} Checked`}
+                    <div className="px-8 pb-10 max-w-[1920px] mx-auto min-h-[calc(100vh-5rem)]">
+                    {renderContent()}
+                    </div>
+                </main>
                 </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-               {item.status === 'present' && <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-green-100">ATTENDED</span>}
-               {item.status === 'late' && <span className="text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-yellow-100">LATE</span>}
-               {item.status === 'absent' && <span className="text-red-600 bg-red-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-red-100">ABSENT</span>}
-               {item.status !== 'present' && (
-                  <button onClick={() => setShowAppealModal(true)} className="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">소명하기</button>
-               )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+            );
+        }
 
-// --- Helper Components ---
+        // --- Admin Pages ---
 
-function NavItem({ icon, label, active, onClick, collapsed }) {
-  return (
-    <button 
-      onClick={onClick}
-      className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'px-5 gap-3.5'} py-3.5 rounded-2xl transition-all mb-1 ${active ? 'bg-white shadow-lg shadow-gray-100 text-[#0046FF] font-bold' : 'text-gray-500 font-medium hover:bg-white/50 hover:text-gray-800'}`}
-      title={label}
-    >
-      {React.cloneElement(icon, { strokeWidth: active ? 2.5 : 2, size: 20 })}
-      {!collapsed && (
-        <>
-          <span className="text-sm whitespace-nowrap">{label}</span>
-          {active && <div className="ml-auto w-2 h-2 rounded-full bg-[#0046FF] shadow-sm"></div>}
-        </>
-      )}
-    </button>
-  );
-}
+        function AdminDashboard({ onNavigate }) {
+            const [courseFilter, setCourseFilter] = useState('all');
 
-function StatCard({ title, value, sub, color, icon, onClick, cursor, trend }) {
-  const styles = {
-    blue: "text-blue-600 bg-blue-50 border-blue-100",
-    red: "text-red-600 bg-red-50 border-red-100",
-    purple: "text-purple-600 bg-purple-50 border-purple-100",
-    green: "text-green-600 bg-green-50 border-green-100"
-  };
+            const filteredCourses = courseFilter === 'all' 
+                ? MOCK_COURSES 
+                : MOCK_COURSES.filter(c => c.status === courseFilter);
 
-  return (
-    <div onClick={onClick} className={`glass-card p-6 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all border border-white/50 ${cursor ? 'cursor-pointer hover:border-purple-200' : ''}`}>
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-2xl ${styles[color]}`}>
-          {React.cloneElement(icon, { size: 22, strokeWidth: 2.5 })}
-        </div>
-        <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend === 'New' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>{trend}</span>
-      </div>
-      <div>
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{title}</p>
-        <h3 className="text-2xl font-black text-gray-800 tracking-tight">{value}</h3>
-        <p className="text-xs font-medium text-gray-500 mt-2 flex items-center gap-1">{sub}</p>
-      </div>
-    </div>
-  );
-}
+            return (
+                <div className="space-y-6 animate-fade-in-up">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                    <div className="glass-card p-6 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all border border-white/50 relative group">
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <select className="bg-gray-50 border border-gray-200 rounded-lg text-[10px] p-1 outline-none text-gray-600 font-bold">
+                        <option>10월</option>
+                        <option>9월</option>
+                        <option>8월</option>
+                        </select>
+                    </div>
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
+                        <CheckCircle size={22} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-600">+2.4%</span>
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1 flex items-center gap-1">이번 달(10월) 출석률 <ChevronDown size={12}/></p>
+                        <h3 className="text-2xl font-black text-gray-800 tracking-tight">94.2%</h3>
+                        <p className="text-xs font-medium text-gray-500 mt-2 flex items-center gap-1">전월 대비 상승 🔥</p>
+                    </div>
+                    </div>
+                    
+                    <StatCard title="미출결 / 지각" value="5명" sub="오늘 확인 필요 🚨" color="red" icon={<AlertCircle />} trend="New" />
+                    <StatCard title="소명 신청" value="3건" sub="신규 접수 📩" color="purple" icon={<MessageSquare />} onClick={() => onNavigate('attendance')} cursor trend="Wait" />
+                    <StatCard title="평균 성취도" value="A-" sub="상승세 📈" color="green" icon={<TrendingUp />} trend="Good" />
+                </div>
 
-function IssueItem({ name, dept, time, issue, type, emoji }) {
-   return (
-      <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all cursor-pointer group hover:border-blue-200">
-         <div className="text-2xl bg-gray-50 w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">{emoji}</div>
-         <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-center mb-1 gap-2">
-               <span className="font-bold text-sm text-gray-900 truncate">{name} <span className="text-xs font-medium text-gray-400 ml-1">{dept}</span></span>
-               <span className="text-xs font-bold text-gray-300 bg-gray-50 px-2 py-0.5 rounded-md flex-shrink-0">{time}</span>
-            </div>
-            <p className={`text-xs font-bold truncate ${type === 'danger' ? 'text-red-500' : 'text-yellow-600'}`}>{issue}</p>
-         </div>
-         <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all flex-shrink-0"/>
-      </div>
-   )
-}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2 p-7 glass-card border-none shadow-sm flex flex-col" glass>
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                        <h3 className="font-bold text-xl text-gray-800 flex items-center gap-2">전체 과정 운영 현황 📂</h3>
+                        <p className="text-sm text-gray-500 mt-1">현재 운영 중이거나 완료된 모든 교육 과정입니다.</p>
+                        </div>
+                        <div className="bg-gray-100/80 p-1 rounded-xl flex">
+                            {['all', 'progress', 'upcoming', 'completed'].map(f => (
+                            <button 
+                            key={f}
+                            onClick={() => setCourseFilter(f)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${courseFilter === f ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                {f === 'all' && '전체'}
+                                {f === 'progress' && '진행중'}
+                                {f === 'upcoming' && '예정'}
+                                {f === 'completed' && '완료'}
+                            </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-3 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                        {filteredCourses.map(course => (
+                        <div key={course.id} className="group p-5 rounded-2xl bg-white border border-gray-100 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-50 transition-all cursor-pointer relative overflow-hidden" onClick={() => onNavigate('attendance')}>
+                            <div className={`flex justify-between items-start mb-3 relative z-10 opacity-${course.status === 'completed' ? '60' : '100'}`}>
+                            <div className="flex gap-3 items-center">
+                                <Badge type={course.status === 'progress' ? 'success' : course.status === 'upcoming' ? 'neutral' : 'dark'}>
+                                    {course.status === 'progress' && '진행중 🔥'}
+                                    {course.status === 'upcoming' && '예정 🗓️'}
+                                    {course.status === 'completed' && '완료 ✅'}
+                                </Badge>
+                                <h4 className={`font-bold text-lg ${course.status === 'completed' ? 'text-gray-500 line-through' : 'text-gray-800'} group-hover:text-blue-600 transition-colors`}>{course.title}</h4>
+                            </div>
+                            {course.status === 'progress' && (
+                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                <ChevronRight size={18} />
+                                </div>
+                            )}
+                            </div>
+                            <div className="flex items-center gap-6 text-sm text-gray-500 mt-4 relative z-10">
+                            <div className="flex items-center gap-2 font-medium bg-gray-50 px-3 py-1.5 rounded-lg"><Calendar size={14} className="text-blue-500"/> {course.date}</div>
+                            <div className="flex items-center gap-2 font-medium bg-gray-50 px-3 py-1.5 rounded-lg"><Users size={14} className="text-purple-500"/> {course.students}명</div>
+                            {course.status !== 'upcoming' && (
+                                <div className="flex-1 ml-4 flex items-center gap-3">
+                                <span className="text-xs font-bold text-gray-400">최종 출석률</span>
+                                <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full ${course.status === 'completed' ? 'bg-gray-400' : 'bg-gradient-to-r from-blue-500 to-blue-400'}`} style={{width: `${course.attendRate}%`}}></div>
+                                </div>
+                                <span className={`text-sm font-bold ${course.status === 'completed' ? 'text-gray-600' : 'text-blue-600'}`}>{course.attendRate}%</span>
+                                </div>
+                            )}
+                            </div>
+                        </div>
+                        ))}
+                        
+                        <div className="p-5 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all gap-2 group" onClick={() => onNavigate('courses')}>
+                        <Plus size={18} />
+                        <span className="font-bold text-sm">2026년 신규 과정 개설하기</span>
+                        </div>
+                    </div>
+                    </Card>
 
-function StatusItem({ value, label, color, icon }) {
-  const colors = {
-    green: "text-green-500 bg-green-50",
-    yellow: "text-yellow-500 bg-yellow-50",
-    blue: "text-blue-500 bg-blue-50"
-  };
+                    <Card className="p-7 glass-card border-none shadow-sm flex flex-col h-full" glass>
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-xl text-gray-800">이슈 트래커 ⚡️</h3>
+                        <Badge type="danger">3건 대기</Badge>
+                    </div>
+                    <div className="space-y-3 flex-1">
+                        <IssueItem name="최미래" dept="ICT기획부" time="10:15" issue="장기 화면 이탈 (30분)" type="danger" emoji="😴" />
+                        <IssueItem name="박투자" dept="WM사업부" time="09:00" issue="지각 사유서 미제출" type="warning" emoji="📝" />
+                        <IssueItem name="김신한" dept="디지털전략부" time="11:30" issue="증빙 사진 식별 불가" type="warning" emoji="📷" />
+                    </div>
+                    <Button className="w-full mt-6 bg-gray-900 text-white hover:bg-gray-800" onClick={() => onNavigate('attendance')}>일괄 처리하기</Button>
+                    </Card>
+                </div>
+                </div>
+            );
+        }
 
-  return (
-    <div className="flex flex-col items-center gap-1 flex-1">
-      <div className={`w-8 h-8 rounded-full ${colors[color]} flex items-center justify-center mb-1`}>
-        {icon}
-      </div>
-      <span className="font-black text-xl text-gray-800 tracking-tight">{value}</span>
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</span>
-    </div>
-  );
-}
+        function CourseManagement({ showToast, onNavigate }) {
+            const [activeTab, setActiveTab] = useState('list'); 
+
+            return (
+                <div className="space-y-8 animate-fade-in-up">
+                <div className="flex border-b border-gray-200/60 relative">
+                    {['list', 'create', 'students'].map((tab) => (
+                    <button 
+                        key={tab}
+                        onClick={() => setActiveTab(tab)} 
+                        className={`px-8 py-4 font-bold text-sm relative transition-colors ${activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                        {tab === 'list' && '📂 과정 목록'}
+                        {tab === 'create' && '✨ 과정 개설'}
+                        {tab === 'students' && '👥 학습자 DB'}
+                        {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>}
+                    </button>
+                    ))}
+                </div>
+
+                {activeTab === 'list' && (
+                    <Card className="p-1 min-h-[400px]">
+                        <div className="p-8">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-lg text-gray-800">관리 중인 과정</h3>
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="secondary" icon={Filter}>필터</Button>
+                                <Button size="sm" variant="primary" icon={Plus} onClick={() => setActiveTab('create')}>신규 과정</Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {MOCK_COURSES.map(course => (
+                            <div key={course.id} className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-2xl hover:shadow-md hover:border-blue-200 transition-all text-left group cursor-pointer" onClick={() => onNavigate('attendance')}>
+                                <div>
+                                <div className="flex gap-3 mb-2">
+                                    <Badge type={course.status === 'progress' ? 'success' : course.status === 'upcoming' ? 'neutral' : 'dark'}>
+                                        {course.status === 'progress' && '진행중'}
+                                        {course.status === 'upcoming' && '예정'}
+                                        {course.status === 'completed' && '완료'}
+                                    </Badge>
+                                    <span className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">{course.title}</span>
+                                </div>
+                                <span className="text-sm font-medium text-gray-400 flex items-center gap-2"><Clock size={14}/> {course.date}</span>
+                                </div>
+                                <div className="flex gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <Button size="sm" variant="secondary" icon={Edit3}>수정</Button>
+                                    <Button size="sm" variant="primary" icon={Users}>관리</Button>
+                                </div>
+                            </div>
+                            ))}
+                        </div>
+                        </div>
+                    </Card>
+                )}
+
+                {activeTab === 'create' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <Card className="p-8 space-y-6">
+                        <h3 className="font-bold text-xl mb-6 flex items-center gap-2">기본 정보 <span className="text-blue-500 text-sm font-normal">Step 1</span></h3>
+                        <div className="space-y-5">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">과정명 🏷️</label>
+                                <input type="text" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" placeholder="예: 2026 하반기 신입사원 연수" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">시작일 🛫</label>
+                                    <input type="date" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">종료일 🛬</label>
+                                    <input type="date" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">교육 방식 📡</label>
+                                <div className="flex gap-3 mt-1">
+                                    {['대면 (Offline)', '비대면 (Zoom)', '하이브리드'].map((type, i) => (
+                                    <label key={i} className="flex-1 cursor-pointer">
+                                        <input type="radio" name="type" className="peer sr-only" defaultChecked={i===2} />
+                                        <div className="w-full text-center py-3 rounded-xl border-2 border-gray-100 text-gray-500 font-bold text-sm peer-checked:border-blue-500 peer-checked:text-blue-600 peer-checked:bg-blue-50 transition-all">
+                                        {type}
+                                        </div>
+                                    </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        </Card>
+                        
+                        <Card className="p-8 flex flex-col justify-between relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
+                        <div className="relative z-10">
+                            <h3 className="font-bold text-xl mb-6 flex items-center gap-2">학습자 세팅 <span className="text-blue-500 text-sm font-normal">Step 2</span></h3>
+                            <div className="border-3 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-gray-50/50 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer group h-64">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg shadow-gray-100 mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                <FileText className="text-gray-400 group-hover:text-blue-500" size={32} />
+                                </div>
+                                <p className="font-bold text-lg text-gray-700">명단 일괄 업로드</p>
+                                <p className="text-sm text-gray-400 mt-2 font-medium">엑셀 파일(.xlsx)을 여기로 끌어오세요.</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-8 relative z-10">
+                            <Button variant="secondary" className="px-8">취소</Button>
+                            <Button className="px-8 shadow-lg shadow-blue-300/50" onClick={() => {showToast("2026년 신규 과정이 개설되었습니다! 🎉"); setActiveTab('list');}}>과정 생성 완료</Button>
+                        </div>
+                        </Card>
+                    </div>
+                )}
+
+                {activeTab === 'students' && (
+                    <Card className="p-0 overflow-hidden border-0 shadow-sm">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+                        <div className="flex items-center gap-3">
+                            <h3 className="font-bold text-lg text-gray-800">2026년 학습자 DB</h3>
+                            <Badge type="neutral">총 15명</Badge>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="secondary" icon={Upload}>엑셀 업로드</Button>
+                            <Button size="sm" variant="primary" icon={UserPlus}>개별 등록</Button>
+                        </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4 rounded-tl-lg">사번</th>
+                                    <th className="px-6 py-4">이름</th>
+                                    <th className="px-6 py-4">부서/직급</th>
+                                    <th className="px-6 py-4">최근 이수 과정</th>
+                                    <th className="px-6 py-4 text-center rounded-tr-lg">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 bg-white">
+                                {MOCK_STUDENTS_FULL.slice(0, 5).map(s => (
+                                    <tr key={s.id} className="hover:bg-blue-50/30 transition-colors">
+                                        <td className="px-6 py-4 text-gray-500 font-mono">202600{s.id}</td>
+                                        <td className="px-6 py-4 font-bold text-gray-800">{s.name}</td>
+                                        <td className="px-6 py-4 text-gray-500 font-medium"><Badge type="neutral">{s.dept}</Badge></td>
+                                        <td className="px-6 py-4 text-gray-600 font-medium">2026 디지털 금융 리터러시</td>
+                                        <td className="px-6 py-4 text-center">
+                                            <button className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-all"><Edit3 size={16}/></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        </div>
+                    </Card>
+                )}
+                </div>
+            );
+        }
+
+        function AttendanceManager({ showToast }) {
+            const [mode, setMode] = useState('online');
+            const [selectedStudent, setSelectedStudent] = useState(null);
+
+            return (
+                <div className="space-y-8 animate-fade-in-up">
+                {/* Hip Control Bar */}
+                <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-6">
+                        <div className="bg-gray-100 p-1.5 rounded-xl flex shadow-inner">
+                        <button onClick={() => setMode('online')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${mode === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><Monitor size={16}/> 비대면</button>
+                        <button onClick={() => setMode('offline')} className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${mode === 'offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}><QrCode size={16}/> 대면</button>
+                        </div>
+                        <div className="h-10 w-px bg-gray-100"></div>
+                        <div>
+                        <span className="text-xs font-bold text-blue-500 block mb-1">CURRENT CLASS</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-800 tracking-tight">2026 디지털 금융 리터러시 심화</span>
+                            <div className="animate-pulse w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="secondary" size="md" icon={Download}>출석부</Button>
+                        <Button variant="primary" size="md" icon={Save}>마감 확정</Button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main List */}
+                    <Card className="lg:col-span-2 p-0 flex flex-col h-[650px] border-0 shadow-sm">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-2xl">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><Sparkles size={16} className="text-yellow-500"/> 실시간 학습자 현황</h3>
+                        <div className="flex gap-3 text-xs font-bold">
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full"><div className="w-2 h-2 rounded-full bg-green-500"></div>출석 12</span>
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full"><div className="w-2 h-2 rounded-full bg-yellow-500"></div>지각 1</span>
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-full"><div className="w-2 h-2 rounded-full bg-red-500"></div>결석 1</span>
+                        </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto bg-white rounded-b-2xl">
+                        <table className="w-full text-sm text-left sticky top-0">
+                            <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-6 py-3">이름/소속</th>
+                                    <th className="px-6 py-3">인증 시간</th>
+                                    <th className="px-6 py-3">상태</th>
+                                    <th className="px-6 py-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {MOCK_STUDENTS_FULL.map((s) => (
+                                    <tr key={s.id} className="hover:bg-blue-50/40 cursor-pointer transition-colors group" onClick={() => setSelectedStudent(s)}>
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-gray-900 flex items-center gap-2">
+                                                {s.name}
+                                                {s.status === 'late' && <span className="text-[10px] bg-gray-100 px-1.5 rounded text-gray-500">사유서 미제출</span>}
+                                            </div>
+                                            <div className="text-xs font-medium text-gray-400 mt-0.5">{s.dept}</div>
+                                        </td>
+                                        <td className="px-6 py-4 font-mono font-medium text-gray-600">{s.time}</td>
+                                        <td className="px-6 py-4">
+                                            <Badge type={s.status === 'present' ? 'success' : s.status === 'late' ? 'warning' : 'danger'}>
+                                                {s.status === 'present' ? '출석' : s.status === 'late' ? '지각' : '결석'}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={(e)=>{e.stopPropagation(); showToast(`✅ ${s.name}님 출석 처리 완료`);}} className="p-1.5 hover:bg-green-100 text-green-600 rounded-lg transition-colors"><CheckCircle size={18}/></button>
+                                                <button onClick={(e)=>{e.stopPropagation(); showToast(`🚨 ${s.name}님 결석 처리 완료`, 'error');}} className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition-colors"><XCircle size={18}/></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        </div>
+                    </Card>
+
+                    {/* Side Panel */}
+                    <div className="space-y-6">
+                        <Card className="p-8 bg-gradient-to-br from-white to-blue-50/50 border-white shadow-lg text-center relative overflow-hidden" glass>
+                        {mode === 'offline' ? (
+                            <>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                                <Badge type="brand" className="mx-auto mb-4">Dynamic QR Live</Badge>
+                                <h3 className="font-bold text-xl text-gray-800 mb-2">출석 스캔해주세요 📸</h3>
+                                <p className="text-xs font-medium text-gray-500 mb-6">코드는 10초마다 자동 갱신됩니다.</p>
+                                <div className="bg-white p-4 rounded-2xl shadow-xl border border-gray-100 inline-block relative overflow-hidden group hover:scale-105 transition-transform duration-500">
+                                    <QrCode size={160} className="text-gray-900" />
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-blue-500/50 blur-sm animate-scan"></div>
+                                </div>
+                                <div className="mt-6 flex justify-center items-center gap-2 bg-white/50 py-2 rounded-full w-fit mx-auto px-4 backdrop-blur-sm">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                                    <span className="text-xs font-bold text-green-600">실시간 활성화됨</span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-float">
+                                    <Upload className="text-blue-600" size={28}/>
+                                </div>
+                                <h3 className="font-bold text-xl text-gray-800 mb-2">증빙 캡처 업로드 ☁️</h3>
+                                <p className="text-xs font-medium text-gray-400 mb-6">Zoom 화면을 캡처해서 올려주세요.</p>
+                                <div className="border-3 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl h-40 flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition-all group" onClick={() => showToast("이미지가 업로드 되었습니다! 📤")}>
+                                    <span className="text-sm font-bold text-gray-600 group-hover:text-blue-600">이미지 Drag & Drop</span>
+                                    <span className="text-[10px] text-blue-400 mt-2 font-medium bg-white px-2 py-1 rounded-full shadow-sm">Auto Timestamp</span>
+                                </div>
+                            </>
+                        )}
+                        </Card>
+
+                        {/* Student Detail Modal */}
+                        {selectedStudent ? (
+                        <Card className="p-6 border-l-4 border-l-blue-500 animate-slide-up shadow-lg">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl">👤</div>
+                                    <div>
+                                        <h4 className="font-bold text-lg text-gray-900">{selectedStudent.name}</h4>
+                                        <p className="text-xs font-medium text-gray-500">{selectedStudent.dept} {selectedStudent.position}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedStudent(null)} className="p-1 hover:bg-gray-100 rounded-full"><XCircle size={20} className="text-gray-400"/></button>
+                            </div>
+                            <div className="space-y-4 bg-gray-50 p-4 rounded-xl">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500 font-medium">입실 시간</span>
+                                    <span className="font-mono font-bold">{selectedStudent.time}</span>
+                                </div>
+                                <div className="flex justify-between text-sm items-center">
+                                    <span className="text-gray-500 font-medium">현재 상태</span>
+                                    <Badge type={selectedStudent.status === 'present' ? 'success' : selectedStudent.status === 'late' ? 'warning' : 'danger'}>
+                                        {selectedStudent.status === 'present' ? '정상 출석' : selectedStudent.status === 'late' ? '지각' : '결석'}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <label className="block text-xs font-bold text-gray-700 mb-2">관리자 메모 ✏️</label>
+                                <textarea className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs font-medium h-20 resize-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none" placeholder="특이사항을 입력하세요..."></textarea>
+                                <Button size="sm" className="w-full mt-3 font-bold" onClick={() => {showToast("저장되었습니다 ✨"); setSelectedStudent(null);}}>저장하기</Button>
+                            </div>
+                        </Card>
+                        ) : (
+                        <Card className="p-8 text-center text-gray-400 py-16 border-2 border-dashed border-gray-200 bg-gray-50/50">
+                            <p className="text-sm font-medium">👈 리스트에서 학습자를 선택하면<br/>상세 정보가 표시됩니다.</p>
+                        </Card>
+                        )}
+                    </div>
+                </div>
+                </div>
+            );
+        }
+
+        function PerformanceReports() {
+            return (
+                <div className="space-y-8 animate-fade-in-up">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <Card className="p-8">
+                        <h3 className="font-bold text-xl mb-6 flex items-center gap-2">종합 성취도 분포 📊</h3>
+                        <div className="flex items-end justify-center h-48 gap-6 px-10">
+                            <div className="w-16 bg-blue-100 h-[20%] rounded-t-2xl relative group hover:bg-blue-200 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-500">C</span></div>
+                            <div className="w-16 bg-blue-300 h-[45%] rounded-t-2xl relative group hover:bg-blue-400 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-500">B</span></div>
+                            <div className="w-16 bg-blue-500 h-[70%] rounded-t-2xl relative group hover:bg-blue-600 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-blue-600">A</span></div>
+                            <div className="w-16 bg-gray-800 h-[30%] rounded-t-2xl relative group hover:bg-gray-700 transition-colors flex justify-center"><span className="absolute -top-6 text-xs font-bold text-gray-800">S</span></div>
+                        </div>
+                        <p className="text-center text-sm font-bold text-gray-500 mt-6 bg-gray-50 py-2 rounded-lg">전체 평균 <span className="text-blue-600">B+ 이상</span> 달성 중입니다 👍</p>
+                    </Card>
+                    <Card className="p-8 flex flex-col">
+                        <h3 className="font-bold text-xl mb-6">주요 인사이트 💡</h3>
+                        <div className="space-y-4 flex-1">
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex gap-3 items-start">
+                            <div className="p-1 bg-green-200 rounded-full"><TrendingUp size={14} className="text-green-700"/></div>
+                            <div>
+                                <h4 className="font-bold text-sm text-green-800">출석률 상승</h4>
+                                <p className="text-xs text-green-700 mt-1">지난 기수 대비 출석률이 5.2% 상승했습니다.</p>
+                            </div>
+                            </div>
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 items-start">
+                            <div className="p-1 bg-blue-200 rounded-full"><Zap size={14} className="text-blue-700"/></div>
+                            <div>
+                                <h4 className="font-bold text-sm text-blue-800">디지털 역량 강화</h4>
+                                <p className="text-xs text-blue-700 mt-1">데이터 분석 과제 평균 점수가 A등급입니다.</p>
+                            </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                <Card className="p-0 border-0 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
+                        <h3 className="font-bold text-lg text-gray-800">2026년 개별 성과 리포트</h3>
+                        <Button size="sm" variant="secondary" icon={Download}>엑셀 다운로드</Button>
+                    </div>
+                    <div className="overflow-x-auto bg-white">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase">
+                                <tr>
+                                    <th className="px-6 py-4">Ranking</th>
+                                    <th className="px-6 py-4">학습자</th>
+                                    <th className="px-6 py-4">출석률 (40%)</th>
+                                    <th className="px-6 py-4">과제 (30%)</th>
+                                    <th className="px-6 py-4">시험 (30%)</th>
+                                    <th className="px-6 py-4">Final Grade</th>
+                                    <th className="px-6 py-4 text-center">Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {MOCK_STUDENTS_FULL.slice(0, 8).map((s, i) => (
+                                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 font-mono font-bold text-gray-400">{i+1}</td>
+                                        <td className="px-6 py-4 font-bold text-gray-800">{s.name} <span className="text-xs text-gray-400 font-normal">({s.dept})</span></td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                            <div className="w-16 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                                <div className="bg-blue-500 h-full rounded-full" style={{width: `${s.attendRate}%`}}></div>
+                                            </div>
+                                            <span className="font-mono text-xs font-bold">{s.attendRate}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 font-medium text-gray-600">92점</td>
+                                        <td className="px-6 py-4 font-medium text-gray-600">88점</td>
+                                        <td className="px-6 py-4"><Badge type={s.score === 'S' ? 'brand' : s.score === 'A' ? 'primary' : 'neutral'}>{s.score} 등급</Badge></td>
+                                        <td className="px-6 py-4 text-center">
+                                            <button className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-all"><FileText size={18}/></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+                </div>
+            );
+        }
+
+        // --- User Mobile App ---
+        function UserMobileApp({ showToast }) {
+            const [activeTab, setActiveTab] = useState('home');
+            const [isScanning, setIsScanning] = useState(false);
+            const [showAppealModal, setShowAppealModal] = useState(false);
+
+            const handleScan = () => {
+                setIsScanning(true);
+                setTimeout(() => {
+                setIsScanning(false);
+                showToast("출석 인증 성공! 🔥", "success");
+                }, 2000);
+            };
+
+            return (
+                <div className="flex justify-center items-center min-h-screen bg-[#E5E5E5] py-8 font-sans selection:bg-blue-500 selection:text-white">
+                {/* Mobile Frame - iPhone 15 Style */}
+                <div className="bg-[#F2F4F6] w-[400px] h-[860px] rounded-[55px] shadow-2xl border-[12px] border-black relative overflow-hidden flex flex-col ring-8 ring-gray-300/50">
+                    
+                    {/* Dynamic Island Area */}
+                    <div className="absolute top-0 w-full h-14 z-50 flex justify-between items-center px-8 pt-4 text-sm font-bold text-gray-900">
+                        <span>09:41</span>
+                        <div className="w-[120px] h-[36px] bg-black rounded-full absolute left-1/2 transform -translate-x-1/2 top-[11px] flex items-center justify-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-[10px] text-white font-medium">Live Activity</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                            <div className="w-5 h-3 bg-gray-900 rounded-[2px]"></div>
+                            <div className="w-0.5 h-1.5 bg-gray-900 absolute right-[28px] top-[20px]"></div>
+                        </div>
+                    </div>
+
+                    {/* Dynamic Content */}
+                    <div className="flex-1 overflow-y-auto pb-24 pt-16 scrollbar-hide">
+                    {activeTab === 'home' ? (
+                        <UserHome handleScan={handleScan} />
+                    ) : (
+                        <UserHistory setShowAppealModal={setShowAppealModal} />
+                    )}
+                    </div>
+
+                    {/* Glass Bottom Navigation */}
+                    <div className="absolute bottom-6 left-6 right-6 h-[80px] bg-white/90 backdrop-blur-xl rounded-[32px] shadow-2xl shadow-gray-200/50 flex justify-around items-center px-2 z-40 border border-white/50">
+                        <NavIcon icon={<LayoutDashboard />} label="홈" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+                        <div className="relative -top-8 group">
+                        <button 
+                            onClick={handleScan}
+                            className="w-16 h-16 bg-gray-900 rounded-[24px] flex items-center justify-center text-white shadow-xl shadow-gray-400/50 hover:scale-110 hover:shadow-2xl transition-all duration-300 active:scale-95 group-hover:bg-[#0046FF]">
+                            <QrCode size={28} />
+                        </button>
+                        </div>
+                        <NavIcon icon={<FileText />} label="내 기록" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
+                    </div>
+
+                    {/* Scan Overlay */}
+                    {isScanning && (
+                    <div className="absolute inset-0 bg-black/90 z-50 flex flex-col items-center justify-center text-white animate-fade-in backdrop-blur-sm">
+                        <div className="w-72 h-72 border-[3px] border-[#0046FF] rounded-[40px] relative flex items-center justify-center overflow-hidden bg-white/5 shadow-[0_0_50px_rgba(0,70,255,0.3)]">
+                            <div className="w-full h-1.5 bg-gradient-to-r from-transparent via-[#0046FF] to-transparent absolute top-0 animate-scan-vertical shadow-[0_0_20px_#0046FF]"></div>
+                            <Camera size={64} className="text-white/20" />
+                            <div className="absolute bottom-6 text-xs font-mono text-blue-300 bg-blue-900/30 px-3 py-1 rounded-full">DETECTING QR...</div>
+                        </div>
+                        <p className="mt-10 font-bold text-lg animate-pulse flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> QR 코드를 찾는 중...</p>
+                        <button onClick={() => setIsScanning(false)} className="mt-8 px-8 py-3 rounded-full bg-white/10 text-sm font-bold hover:bg-white/20 transition-colors">취소</button>
+                    </div>
+                    )}
+
+                    {/* Appeal Modal */}
+                    {showAppealModal && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end animate-fade-in">
+                            <div className="bg-[#F2F4F6] w-full rounded-t-[40px] p-8 pb-12 animate-slide-up shadow-2xl">
+                                <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-8"></div>
+                                <h3 className="font-bold text-2xl mb-6 text-gray-900">소명 신청 📝</h3>
+                                <div className="space-y-5">
+                                    <div className="bg-white p-4 rounded-2xl border border-gray-100">
+                                        <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Date</label>
+                                        <div className="font-bold text-gray-800">2026.10.12 (지각)</div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Reason</label>
+                                        <select className="w-full border-none bg-white rounded-2xl p-4 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 shadow-sm">
+                                            <option>🚌 대중교통 지연</option>
+                                            <option>🏥 병원 진료</option>
+                                            <option>💍 경조사</option>
+                                            <option>✏️ 기타 (직접 입력)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-400 block mb-2 uppercase tracking-wide">Photo Evidence</label>
+                                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center text-gray-400 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
+                                            <Camera className="mx-auto mb-2 text-gray-300" size={32} />
+                                            <span className="text-xs font-bold">터치하여 사진 업로드</span>
+                                        </div>
+                                    </div>
+                                    <Button className="w-full h-14 mt-4 text-lg shadow-lg shadow-blue-200" onClick={() => {showToast("신청이 접수되었습니다! ✅"); setShowAppealModal(false);}}>제출하기</Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                </div>
+            );
+        }
+
+        function UserHome({ handleScan }) {
+            return (
+                <div className="px-7 space-y-8">
+                <div className="flex justify-between items-center mt-2">
+                    <div>
+                    <p className="text-gray-500 font-bold text-sm mb-0.5">Welcome back,</p>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Kim Shinhan <span className="text-2xl">👋</span></h2>
+                    </div>
+                    <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px] rounded-full shadow-lg shadow-blue-200">
+                        <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <span className="font-black text-xl gradient-text">K</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-white">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">MY STATUS <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div></h3>
+                        <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">2026 OCT</span>
+                    </div>
+                    <div className="flex justify-between items-start gap-2">
+                        <StatusItem value="95%" label="Attendance" color="green" icon={<CheckCircle size={16}/>} />
+                        <div className="w-px h-12 bg-gray-100 self-center"></div>
+                        <StatusItem value="1건" label="To-Do" color="yellow" icon={<AlertCircle size={16}/>} />
+                        <div className="w-px h-12 bg-gray-100 self-center"></div>
+                        <StatusItem value="A" label="Grade" color="blue" icon={<TrendingUp size={16}/>} />
+                    </div>
+                </div>
+
+                <div className="relative group cursor-pointer" onClick={handleScan}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[32px] blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+                    <div className="relative bg-[#0F172A] p-7 rounded-[32px] text-white shadow-2xl overflow-hidden border border-white/10">
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
+                    
+                    <div className="flex justify-between items-start mb-6 relative z-10">
+                        <Badge type="neutral" className="bg-white/10 text-white border-0 backdrop-blur-md">TODAY</Badge>
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md"><MoreVertical size={16}/></div>
+                    </div>
+                    
+                    <h2 className="text-2xl font-black leading-tight mb-8 relative z-10">2026 디지털 금융<br/>리터러시 심화 <span className="text-blue-400">3차시</span></h2>
+                    
+                    <div className="space-y-3 relative z-10">
+                        <div className="flex items-center gap-3 text-sm font-medium text-gray-300">
+                            <div className="p-2 bg-white/5 rounded-xl"><Clock size={16} className="text-blue-400"/></div>
+                            <span>14:00 ~ 18:00 (4H)</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm font-medium text-gray-300">
+                            <div className="p-2 bg-white/5 rounded-xl"><Users size={16} className="text-purple-400"/></div>
+                            <span>신한은행 본점 20층 대강당</span>
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-6 right-6 w-12 h-12 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                        <ArrowRight size={20} />
+                    </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100">
+                    <div className="bg-red-50 p-2.5 rounded-xl text-red-500">
+                        <Bell size={18} />
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-800">내일 사전 과제 마감 🚨</p>
+                        <p className="text-xs text-gray-400 truncate">리더십 역량 강화 과정 - 자기소개서 제출</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-300" />
+                </div>
+                </div>
+            );
+        }
+
+        function UserHistory({ setShowAppealModal }) {
+            const history = [
+                { date: "10.14", title: "디지털 리터러시 (3차)", status: "present", time: "13:55" },
+                { date: "10.13", title: "금융 데이터 분석 (2차)", status: "present", time: "08:50" },
+                { date: "10.12", title: "리더십 역량 강화", status: "late", time: "09:40" },
+                { date: "10.10", title: "경영 전략 워크샵", status: "absent", time: "-" },
+            ];
+
+            return (
+                <div className="px-7 space-y-6">
+                <h2 className="font-black text-2xl text-gray-900">History 🗓️</h2>
+                <div className="space-y-4">
+                    {history.map((item, i) => (
+                    <div key={i} className="bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm flex items-center justify-between group active:scale-95 transition-all hover:shadow-md">
+                        <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-gray-50 rounded-2xl flex flex-col items-center justify-center border border-gray-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+                            <span className="text-[10px] text-gray-400 font-bold uppercase">{item.date.split('.')[0]} OCT</span>
+                            <span className="font-black text-gray-800 text-xl leading-none">{item.date.split('.')[1]}</span>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm text-gray-800 mb-1">{item.title}</h4>
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                                <Clock size={12}/> {item.time === '-' ? '기록 없음' : `${item.time} Checked`}
+                            </div>
+                        </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                            {item.status === 'present' && <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-green-100">ATTENDED</span>}
+                            {item.status === 'late' && <span className="text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-yellow-100">LATE</span>}
+                            {item.status === 'absent' && <span className="text-red-600 bg-red-50 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-red-100">ABSENT</span>}
+                            {item.status !== 'present' && (
+                                <button onClick={() => setShowAppealModal(true)} className="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">소명하기</button>
+                            )}
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                </div>
+            );
+        }
+
+        // --- Helper Components ---
+
+        function NavItem({ icon, label, active, onClick, collapsed }) {
+            return (
+                <button 
+                onClick={onClick}
+                className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'px-5 gap-3.5'} py-3.5 rounded-2xl transition-all mb-1 ${active ? 'bg-white shadow-lg shadow-gray-100 text-[#0046FF] font-bold' : 'text-gray-500 font-medium hover:bg-white/50 hover:text-gray-800'}`}
+                title={label}
+                >
+                {React.cloneElement(icon, { strokeWidth: active ? 2.5 : 2, size: 20 })}
+                {!collapsed && (
+                    <>
+                    <span className="text-sm whitespace-nowrap">{label}</span>
+                    {active && <div className="ml-auto w-2 h-2 rounded-full bg-[#0046FF] shadow-sm"></div>}
+                    </>
+                )}
+                </button>
+            );
+        }
+
+        function StatCard({ title, value, sub, color, icon, onClick, cursor, trend }) {
+            const styles = {
+                blue: "text-blue-600 bg-blue-50 border-blue-100",
+                red: "text-red-600 bg-red-50 border-red-100",
+                purple: "text-purple-600 bg-purple-50 border-purple-100",
+                green: "text-green-600 bg-green-50 border-green-100"
+            };
+
+            return (
+                <div onClick={onClick} className={`glass-card p-6 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all border border-white/50 ${cursor ? 'cursor-pointer hover:border-purple-200' : ''}`}>
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 rounded-2xl ${styles[color]}`}>
+                    {React.cloneElement(icon, { size: 22, strokeWidth: 2.5 })}
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend === 'New' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>{trend}</span>
+                </div>
+                <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{title}</p>
+                    <h3 className="text-2xl font-black text-gray-800 tracking-tight">{value}</h3>
+                    <p className="text-xs font-medium text-gray-500 mt-2 flex items-center gap-1">{sub}</p>
+                </div>
+                </div>
+            );
+        }
+
+        function IssueItem({ name, dept, time, issue, type, emoji }) {
+            return (
+                <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all cursor-pointer group hover:border-blue-200">
+                    <div className="text-2xl bg-gray-50 w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">{emoji}</div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-1 gap-2">
+                            <span className="font-bold text-sm text-gray-900 truncate">{name} <span className="text-xs font-medium text-gray-400 ml-1">{dept}</span></span>
+                            <span className="text-xs font-bold text-gray-300 bg-gray-50 px-2 py-0.5 rounded-md flex-shrink-0">{time}</span>
+                        </div>
+                        <p className={`text-xs font-bold truncate ${type === 'danger' ? 'text-red-500' : 'text-yellow-600'}`}>{issue}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all flex-shrink-0"/>
+                </div>
+            )
+        }
+
+        function StatusItem({ value, label, color, icon }) {
+            const colors = {
+                green: "text-green-500 bg-green-50",
+                yellow: "text-yellow-500 bg-yellow-50",
+                blue: "text-blue-500 bg-blue-50"
+            };
+
+            return (
+                <div className="flex flex-col items-center gap-1 flex-1">
+                <div className={`w-8 h-8 rounded-full ${colors[color]} flex items-center justify-center mb-1`}>
+                    {icon}
+                </div>
+                <span className="font-black text-xl text-gray-800 tracking-tight">{value}</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</span>
+                </div>
+            );
+        }
+
+        // --- Mount App ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ShinhanLearningOn />);
+    </script>
+</body>
+</html>
