@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>웅진씽크버 (Woongjin Thinkver) - 기업교육 설계 파트너</title>
+    
+    <!-- 1. Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- 2. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        overflow-x: hidden;
+        background-color: #0f172a; /* Slate 900 */
+        color: #f8fafc; /* Slate 50 */
+        scroll-behavior: smooth;
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+      
+      .cursor-blink {
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      /* Highlight Animation */
+      .highlight-text {
+        position: relative;
+        display: inline-block;
+      }
+      .highlight-text::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0.3em;
+        background-color: rgba(59, 130, 246, 0.3);
+        z-index: -1;
+      }
+    </style>
+
+    <!-- 3. React & Libraries (CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. Import Map for Google GenAI -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // Polyfill for process.env in browser environment to prevent crash
+        if (typeof process === 'undefined') {
+            window.process = { env: { API_KEY: '' } };
+        }
+
+        // --------------------------------------------------------
+        // 1. Global Setup
+        // --------------------------------------------------------
+        const { useState, useEffect, useRef } = React;
+        const { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useSpring } = window.Motion;
+        const { LineChart, Line, ResponsiveContainer, CartesianGrid, YAxis } = window.Recharts;
+        const { ArrowRight, ChevronRight, CheckCircle2, Quote, Settings, Play, LifeBuoy, ExternalLink, Sparkles, Loader2, Video } = window.lucideReact;
+
+        const CONSULTATION_LINK = "https://kub-inbound.pages.dev/";
+        const UDEMY_LINK = "https://udemy.wjtb.co.kr/main.html";
+
+        // --------------------------------------------------------
+        // 2. Shared Components
+        // --------------------------------------------------------
+
+        // Top Progress Bar
+        const ProgressBar = () => {
+            const { scrollYProgress } = useScroll();
+            const scaleX = useSpring(scrollYProgress, {
+                stiffness: 100,
+                damping: 30,
+                restDelta: 0.001
+            });
+
+            return (
+                <motion.div
+                    className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-900 via-blue-500 to-cyan-400 z-[100] origin-left"
+                    style={{ scaleX }}
+                />
+            );
+        };
+
+        // Floating Dot Navigation
+        const FloatingNav = () => {
+            const [activeSection, setActiveSection] = useState('section-01');
+            const sections = [
+                { id: 'section-01', label: 'Intro' },
+                { id: 'section-02', label: 'Diagnosis' },
+                { id: 'section-03', label: 'Reality' },
+                { id: 'section-04', label: 'Bridge' },
+                { id: 'section-05', label: 'Identity' },
+                { id: 'section-06', label: 'Global' },
+                { id: 'section-07', label: 'Cost' },
+                { id: 'section-08', label: 'Ops' },
+                { id: 'section-09', label: 'Data' },
+                { id: 'section-10', label: 'Contact' },
+            ];
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    const scrollPosition = window.scrollY + window.innerHeight / 3;
+                    for (const section of sections) {
+                        const element = document.getElementById(section.id);
+                        if (element) {
+                            const { offsetTop, offsetHeight } = element;
+                            if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+                                setActiveSection(section.id);
+                                break;
+                            }
+                        }
+                    }
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const scrollTo = (id) => {
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            return (
+                <div className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-50 hidden xl:flex flex-col gap-3 items-end">
+                    {sections.map((s) => (
+                        <button 
+                            key={s.id} 
+                            onClick={() => scrollTo(s.id)} 
+                            className="group flex items-center gap-3"
+                        >
+                            <span className={`text-[10px] uppercase font-medium tracking-widest transition-all duration-300 ${activeSection === s.id ? 'text-blue-400 opacity-100 translate-x-0' : 'text-slate-500 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0'}`}>
+                                {s.label}
+                            </span>
+                            <div 
+                                className={`rounded-full transition-all duration-300 ${
+                                    activeSection === s.id 
+                                    ? 'w-2 h-2 bg-blue-500 ring-2 ring-blue-500/20' 
+                                    : 'w-1.5 h-1.5 bg-slate-700 hover:bg-slate-500'
+                                }`} 
+                            />
+                        </button>
+                    ))}
+                </div>
+            );
+        };
+
+        // Navbar
+        const Navbar = () => {
+            const [isScrolled, setIsScrolled] = useState(false);
+            const { scrollY } = useScroll();
+
+            useMotionValueEvent(scrollY, "change", (latest) => {
+                setIsScrolled(latest > 50);
+            });
+
+            return (
+                <motion.nav
+                    className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
+                        isScrolled ? 'bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 py-4' : 'bg-transparent py-6'
+                    }`}
+                >
+                    <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
+                            <div className="w-2.5 h-2.5 bg-blue-600 rounded-sm" />
+                            <span className="text-lg md:text-xl font-bold tracking-tight text-white">
+                                Thinkver
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-6">
+                             <a 
+                                href={UDEMY_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hidden md:flex text-sm text-slate-400 hover:text-white font-medium transition-colors items-center gap-1"
+                            >
+                                Udemy Business <ExternalLink size={12} />
+                            </a>
+                             <a 
+                                href={CONSULTATION_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sm px-4 py-2 rounded-full border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white font-medium transition-all"
+                            >
+                                상담 문의
+                            </a>
+                        </div>
+                    </div>
+                </motion.nav>
+            );
+        };
+
+        // --------------------------------------------------------
+        // 3. Sections
+        // --------------------------------------------------------
+
+        // SECTION 01: Hero (Veo Integration)
+        const Section01_Hero = () => {
+            const fullText = "기업 교육은\n콘텐츠나 플랫폼의 문제가 아니라\n‘설계’의 문제입니다";
+            const [display, setDisplay] = useState("");
+            const [isTypingComplete, setIsTypingComplete] = useState(false);
+            const [videoUrl, setVideoUrl] = useState(null);
+            const [isGenerating, setIsGenerating] = useState(false);
+            
+            useEffect(() => {
+                let i = 0;
+                const interval = setInterval(() => {
+                    setDisplay(fullText.slice(0, i + 1));
+                    i++;
+                    if (i > fullText.length) {
+                        clearInterval(interval);
+                        setIsTypingComplete(true);
+                    }
+                }, 60);
+                return () => clearInterval(interval);
+            }, []);
+
+            const handleGenerateVideo = async () => {
+                if (isGenerating) return;
+
+                try {
+                    if (!window.aistudio) {
+                        console.error("AI Studio helpers not found");
+                        return;
+                    }
+                    
+                    const hasKey = await window.aistudio.hasSelectedApiKey();
+                    if (!hasKey) {
+                        await window.aistudio.openSelectKey();
+                    }
+                    
+                    setIsGenerating(true);
+
+                    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                    
+                    // Generate a corporate-tech themed abstract video
+                    let operation = await ai.models.generateVideos({
+                        model: 'veo-3.1-fast-generate-preview',
+                        prompt: 'Futuristic abstract digital network, connecting dots and lines, dark blue and slate background, constellations of knowledge, smooth slow motion, cinematic lighting, corporate tech education theme, 4k',
+                        config: {
+                        numberOfVideos: 1,
+                        resolution: '1080p',
+                        aspectRatio: '16:9'
+                        }
+                    });
+
+                    // Poll for completion
+                    while (!operation.done) {
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        operation = await ai.operations.getVideosOperation({operation: operation});
+                    }
+
+                    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+                    if (downloadLink) {
+                        // Fetch the video content using the API Key
+                        const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        setVideoUrl(url);
+                    }
+                    
+                } catch (error) {
+                    console.error("Video generation failed", error);
+                    if (error.message && error.message.includes("Requested entity was not found")) {
+                        await window.aistudio?.openSelectKey();
+                    } else {
+                        alert("비디오 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                    }
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            return (
+                <section id="section-01" className="relative h-screen flex flex-col justify-center items-center bg-slate-900 text-white px-6 overflow-hidden">
+                    
+                    {/* Background Video Layer */}
+                    {videoUrl ? (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 1 }}
+                            className="absolute inset-0 z-0"
+                        >
+                            <video 
+                                src={videoUrl} 
+                                autoPlay 
+                                loop 
+                                muted 
+                                playsInline
+                                className="w-full h-full object-cover"
+                            />
+                            {/* Dark Overlay for Text Readability */}
+                            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-[2px]"></div>
+                        </motion.div>
+                    ) : (
+                        /* Default Gradient Background if no video */
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 z-0"></div>
+                    )}
+
+                    <div className="max-w-4xl w-full text-left md:text-center space-y-8 md:space-y-12 z-10 relative">
+                        {/* Main Headline with Typing */}
+                        <div className="min-h-[140px] md:min-h-[200px]">
+                            {isTypingComplete ? (
+                                <motion.h1 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight text-slate-100 whitespace-pre-wrap"
+                                >
+                                    기업 교육은<br/>
+                                    콘텐츠나 플랫폼의 문제가 아니라<br/>
+                                    <span className="relative inline-block text-blue-500">
+                                        ‘설계’
+                                        <motion.span 
+                                            className="absolute bottom-1 left-0 w-full h-3 bg-blue-500/20 -z-10"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: '100%' }}
+                                            transition={{ duration: 0.5 }}
+                                        />
+                                    </span>
+                                    의 문제입니다
+                                </motion.h1>
+                            ) : (
+                                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight md:leading-tight text-slate-100 whitespace-pre-wrap">
+                                    {display}<span className="cursor-blink text-blue-500">|</span>
+                                </h1>
+                            )}
+                        </div>
+
+                        {/* Sub Headline */}
+                        <motion.p 
+                            className="text-base md:text-xl text-slate-400 font-light"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 3, duration: 1 }}
+                        >
+                            Thinkver는 글로벌 에듀테크를 기업에 맞게 설계합니다.
+                        </motion.p>
+
+                        {/* Single Soft CTA */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 3.5, duration: 1 }}
+                        >
+                             <a 
+                                href={CONSULTATION_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-base font-medium border-b border-transparent hover:border-blue-500 pb-0.5 cursor-pointer"
+                            >
+                                제대로 교육 설계 받아보기 <ArrowRight size={16} className="text-blue-500 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                        </motion.div>
+                    </div>
+
+                    {/* Subtle Scroll Hint */}
+                    <motion.div 
+                        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30 pointer-events-none z-10"
+                        animate={{ y: [0, 5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    >
+                        <div className="w-[1px] h-12 bg-slate-500" />
+                    </motion.div>
+
+                    {/* AI Video Generation Button */}
+                    <motion.button
+                        onClick={handleGenerateVideo}
+                        disabled={isGenerating}
+                        className="absolute bottom-6 right-6 z-20 flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white text-xs rounded-full border border-slate-700 backdrop-blur-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        {isGenerating ? (
+                            <React.Fragment>
+                                <Loader2 size={12} className="animate-spin text-blue-500" />
+                                <span>AI 배경 생성중...</span>
+                            </React.Fragment>
+                        ) : (
+                            <React.Fragment>
+                                <Sparkles size={12} className={videoUrl ? "text-blue-400" : "text-yellow-400"} />
+                                <span>{videoUrl ? "AI 배경 재생성" : "AI 배경 생성"}</span>
+                            </React.Fragment>
+                        )}
+                    </motion.button>
+                </section>
+            );
+        };
+
+        // SECTION 02: Diagnosis
+        const Section02_Question = () => {
+            return (
+                <section id="section-02" className="py-24 md:py-32 bg-slate-900">
+                    <div className="max-w-6xl mx-auto px-6">
+                        <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+                            {/* Header */}
+                            <motion.div 
+                                className="w-full md:w-1/3"
+                                initial={{ opacity: 0, x: -20 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6 }}
+                            >
+                                <motion.div 
+                                    className="text-3xl md:text-4xl mb-6 inline-block"
+                                    animate={{ y: [0, -6, 0] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    🤔
+                                </motion.div>
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">
+                                    지금 우리 조직의<br/>
+                                    상태는 어떤가요?
+                                </h2>
+                                <p className="text-slate-400 text-sm leading-relaxed">
+                                    많은 기업들이 '도입'에만 집중하고<br/>
+                                    '운영'과 '확장'을 놓치고 있습니다.
+                                </p>
+                            </motion.div>
+
+                            {/* Cards */}
+                            <div className="w-full md:w-2/3 grid grid-cols-1 gap-4 md:gap-6">
+                                {[
+                                    { icon: "📉", title: "콘텐츠 활용도 저조", desc: "비싼 비용을 들여 도입했지만, 직원들이 찾지 않습니다." },
+                                    { icon: "🐢", title: "기술 변화 대응 부족", desc: "현업은 AI를 원하는데, 교육은 예전 방식에 머물러 있습니다." },
+                                    { icon: "📦", title: "단절된 학습 경험", desc: "LMS와 현업 툴이 분리되어 학습이 업무로 연결되지 않습니다." }
+                                ].map((item, idx) => (
+                                    <motion.div 
+                                        key={idx} 
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.15 }}
+                                        className="flex items-start gap-4 md:gap-6 p-6 rounded-xl border border-slate-800 bg-slate-800/30 hover:bg-slate-800 hover:border-slate-600 transition-all"
+                                    >
+                                        <div className="text-2xl md:text-3xl bg-slate-800 p-3 rounded-lg shadow-sm">{item.icon}</div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-200 mb-2">{item.title}</h3>
+                                            <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 03: Reality
+        const Section03_Reality = () => {
+             return (
+                <section id="section-03" className="py-24 md:py-32 bg-slate-950 border-t border-slate-900">
+                    <div className="max-w-6xl mx-auto px-6">
+                        <div className="text-center mb-12 md:mb-16">
+                            <motion.div 
+                                className="text-3xl md:text-4xl mb-6 inline-block"
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                🚧
+                            </motion.div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">현실의 속도를 따라가지 못하는 교육</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.7 }}
+                                className="p-8 bg-slate-900 rounded-2xl border border-slate-800 flex flex-col items-center text-center opacity-70"
+                            >
+                                <div className="text-4xl mb-6">🇰🇷</div>
+                                <h3 className="text-lg md:text-xl font-bold text-slate-400 mb-4">기존 국내 플랫폼</h3>
+                                <ul className="space-y-3 text-slate-500 text-sm text-left w-full max-w-xs mx-auto">
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-slate-600 rounded-full"/>업데이트 주기 지연</li>
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-slate-600 rounded-full"/>한정된 콘텐츠 풀</li>
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-slate-600 rounded-full"/>폐쇄적인 기술 환경</li>
+                                </ul>
+                            </motion.div>
+
+                            <motion.div 
+                                initial={{ opacity: 0, x: 30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.7 }}
+                                className="p-8 bg-blue-900/10 rounded-2xl border border-blue-900/30 flex flex-col items-center text-center relative overflow-hidden shadow-lg shadow-blue-900/10"
+                            >
+                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-500" />
+                                <div className="text-4xl mb-6">🌍</div>
+                                <h3 className="text-lg md:text-xl font-bold text-white mb-4">글로벌 스탠다드</h3>
+                                <ul className="space-y-3 text-slate-300 text-sm text-left w-full max-w-xs mx-auto">
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full"/>스킬 반감기 2.5년 대응</li>
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full"/>실시간 글로벌 기술 스택</li>
+                                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full"/>AI 기반 맞춤형 큐레이션</li>
+                                </ul>
+                            </motion.div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Breathing Rhythm Section
+        const BreathingSection = () => (
+            <section className="py-20 md:py-24 bg-slate-900 flex justify-center items-center text-center border-y border-slate-800/50">
+                <motion.div 
+                    className="max-w-2xl px-6"
+                    initial={{ opacity: 0.8, scale: 0.98 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                >
+                    <p className="text-xl md:text-2xl text-slate-300 font-light leading-relaxed">
+                        그래서 Thinkver는<br/>
+                        <span className="font-bold text-white">플랫폼보다 구조를</span> 먼저 봅니다.
+                    </p>
+                </motion.div>
+            </section>
+        );
+
+        // SECTION 04: Bridge
+        const Section04_Bridge = () => {
+            return (
+                <section id="section-04" className="py-24 md:py-32 bg-slate-900 flex flex-col items-center justify-center text-center px-6">
+                    <motion.div 
+                        className="text-blue-500 mb-6"
+                        animate={{ y: [0, 10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    >
+                        <ArrowRight className="rotate-90" size={32} />
+                    </motion.div>
+                    <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-8">
+                        국내냐, 글로벌이냐의<br/>
+                        문제가 아닙니다.
+                    </h2>
+                    <p className="text-slate-400 text-base md:text-lg max-w-2xl mx-auto">
+                        누가 대신 <span className="text-white font-bold border-b border-blue-500">책임지고 설계하느냐</span>의 문제입니다.
+                    </p>
+                </section>
+            );
+        };
+
+        // SECTION 05: Identity
+        const Section05_Identity = () => {
+            return (
+                <section id="section-05" className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-900 px-6 py-20 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent opacity-10 pointer-events-none" />
+                    <div className="max-w-5xl w-full text-center z-10">
+                        <div className="text-4xl mb-8">🤝</div>
+                        <motion.div
+                            className="text-4xl md:text-6xl font-black leading-tight tracking-tight mb-20"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.5 }}
+                        >
+                            <motion.div variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.6 }}>
+                                웅진씽크버는
+                            </motion.div>
+                            <motion.div className="text-slate-500" variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.6, delay: 0.2 }}>
+                                글로벌 리딩 EdTech 플랫폼을
+                            </motion.div>
+                            <motion.div className="text-blue-600" variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.6, delay: 0.4 }}>
+                                기업에 맞게 설계하고,
+                            </motion.div>
+                            <motion.div className="text-blue-600" variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.6, delay: 0.6 }}>
+                                운영까지 책임지는
+                            </motion.div>
+                            <motion.div variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.6, delay: 0.8 }}>
+                                기업교육 서비스입니다
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.div 
+                            className="flex flex-wrap justify-center gap-10 md:gap-20 border-t border-slate-200 pt-16"
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 1 }}
+                        >
+                            <div className="flex flex-col items-center gap-3 group">
+                                <motion.div 
+                                    className="p-4 bg-white rounded-full shadow-lg"
+                                    animate={{ y: [0, -5, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+                                >
+                                    <Settings className="w-8 h-8 text-slate-700" />
+                                </motion.div>
+                                <span className="font-bold text-slate-700">설계 Design</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-3 group">
+                                <motion.div 
+                                    className="p-4 bg-white rounded-full shadow-lg"
+                                    animate={{ y: [0, -5, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                                >
+                                    <Play className="w-8 h-8 text-blue-600" />
+                                </motion.div>
+                                <span className="font-bold text-slate-700">운영 Operate</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-3 group">
+                                <motion.div 
+                                    className="p-4 bg-white rounded-full shadow-lg"
+                                    animate={{ y: [0, -5, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                                >
+                                    <LifeBuoy className="w-8 h-8 text-slate-700" />
+                                </motion.div>
+                                <span className="font-bold text-slate-700">지원 Support</span>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 06: Global USP
+        const Section06_UspGlobal = () => {
+            return (
+                <section id="section-06" className="py-24 md:py-32 bg-white overflow-hidden border-t border-slate-100">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="flex flex-col md:flex-row gap-16 items-center">
+                            
+                            {/* Left: Text */}
+                            <div className="w-full md:w-1/2">
+                                <motion.div 
+                                    className="text-4xl mb-6 inline-block"
+                                    animate={{ y: [0, -6, 0] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    🌍
+                                </motion.div>
+                                <motion.span 
+                                    className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold mb-6 ml-4 align-middle"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                >
+                                    GLOBAL STANDARD
+                                </motion.span>
+                                <motion.h2 
+                                    className="text-3xl md:text-4xl font-bold leading-tight mb-8 text-slate-900"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                >
+                                    글로벌 리딩 에듀테크를<br />
+                                    <span className="text-blue-600">우리 조직에 맞게</span><br />
+                                    재설계합니다
+                                </motion.h2>
+                                <motion.p 
+                                    className="text-base md:text-lg text-slate-600 mb-8 leading-relaxed"
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    Udemy, Coursera 등 검증된 글로벌 플랫폼의 콘텐츠를 
+                                    기업의 직무와 레벨에 맞춰 큐레이션합니다.
+                                </motion.p>
+                            </div>
+
+                            {/* Right: Visual */}
+                            <div className="w-full md:w-1/2 relative">
+                                <motion.div 
+                                    className="relative z-10 bg-slate-900 rounded-2xl p-8 shadow-2xl"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.8 }}
+                                >
+                                    <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                                        <div className="flex gap-2">
+                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                        </div>
+                                        <span className="text-xs text-slate-400">Custom Curriculum</span>
+                                    </div>
+                                    
+                                    <div className="space-y-6">
+                                        {/* Item 1: Global */}
+                                        <div className="flex items-center gap-4 text-slate-300">
+                                            <span className="text-xl w-8 text-center">📚</span>
+                                            <div className="flex-1 h-2 bg-slate-700 rounded overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full bg-blue-500" 
+                                                    initial={{ width: "60%" }} 
+                                                    animate={{ width: ["60%", "75%", "60%"] }} 
+                                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} 
+                                                />
+                                            </div>
+                                            <span className="text-xs w-8">Global</span>
+                                        </div>
+
+                                        {/* Item 2: Fit */}
+                                        <div className="flex items-center gap-4 text-slate-300">
+                                            <span className="text-xl w-8 text-center">🎯</span>
+                                            <div className="flex-1 h-2 bg-slate-700 rounded overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full bg-purple-500" 
+                                                    initial={{ width: "40%" }} 
+                                                    animate={{ width: ["40%", "55%", "40%"] }} 
+                                                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} 
+                                                />
+                                            </div>
+                                            <span className="text-xs w-8">Fit</span>
+                                        </div>
+
+                                        {/* Item 3: Tech (Added) */}
+                                        <div className="flex items-center gap-4 text-slate-300">
+                                            <span className="text-xl w-8 text-center">💻</span>
+                                            <div className="flex-1 h-2 bg-slate-700 rounded overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full bg-amber-500" 
+                                                    initial={{ width: "50%" }} 
+                                                    animate={{ width: ["50%", "65%", "50%"] }} 
+                                                    transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} 
+                                                />
+                                            </div>
+                                            <span className="text-xs w-8">Tech</span>
+                                        </div>
+
+                                        {/* Item 4: Skill (Added) */}
+                                        <div className="flex items-center gap-4 text-slate-300">
+                                            <span className="text-xl w-8 text-center">⚡</span>
+                                            <div className="flex-1 h-2 bg-slate-700 rounded overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full bg-emerald-500" 
+                                                    initial={{ width: "70%" }} 
+                                                    animate={{ width: ["70%", "85%", "70%"] }} 
+                                                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} 
+                                                />
+                                            </div>
+                                            <span className="text-xs w-8">Skill</span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                                
+                                <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl -z-10 opacity-50 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 07: USP Cost
+        const Section07_UspCost = () => {
+            const data = [
+                { name: '1Q', cost: 3000, fixed: 5000 },
+                { name: '2Q', cost: 8000, fixed: 5000 },
+                { name: '3Q', cost: 4000, fixed: 5000 },
+                { name: '4Q', cost: 9000, fixed: 5000 },
+            ];
+            
+            const tags = [
+                "예산 통제 가능",
+                "계획 안정화",
+                "비용 효율화",
+                "학습 활성화"
+            ];
+
+            return (
+                <section id="section-07" className="py-24 md:py-32 bg-slate-50 border-t border-slate-200">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="text-center mb-12">
+                            <span className="text-4xl mb-4 block">💰</span>
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+                                교육 비용, <span className="text-blue-600">관리 가능한 구조</span>로
+                            </h2>
+                            <p className="text-slate-600 text-sm md:text-base">예측 불가능한 비용 변동을 고정된 구독 모델로 전환합니다.</p>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center">
+                             {/* Chart Container */}
+                             <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                className="w-full md:w-2/3 bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-slate-100 relative overflow-hidden text-slate-900"
+                             >
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                                    <h3 className="font-bold text-slate-800">비용 변동성 비교</h3>
+                                    <div className="flex gap-4 text-xs font-bold text-slate-600">
+                                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-400"></div>기존 (불안정)</span>
+                                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Thinkver (안정)</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="h-48 md:h-64 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={data} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                            <YAxis hide domain={[0, 12000]} />
+                                            {/* Old: Erratic Line */}
+                                            <Line 
+                                                type="monotone" 
+                                                dataKey="cost" 
+                                                stroke="#f87171" 
+                                                strokeWidth={2} 
+                                                dot={{r:4, fill:'#f87171'}} 
+                                                strokeDasharray="5 5"
+                                                isAnimationActive={true}
+                                            />
+                                            {/* New: Stable Step Line */}
+                                            <Line 
+                                                type="step" 
+                                                dataKey="fixed" 
+                                                stroke="#3b82f6" 
+                                                strokeWidth={4} 
+                                                dot={false}
+                                                isAnimationActive={true} 
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex flex-wrap justify-center gap-2 mt-6">
+                                    {tags.map((tag, idx) => (
+                                        <span key={idx} className="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                             </motion.div>
+                        </div>
+
+                        <div className="mt-12 md:mt-16 text-center border-t border-slate-200 pt-8 max-w-2xl mx-auto">
+                            <p className="text-base md:text-lg text-slate-700 font-medium mb-4">
+                                "이 방식, 우리 조직에도 맞을까요?"
+                            </p>
+                             <a 
+                                href={CONSULTATION_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors text-base font-medium border-b border-transparent hover:border-blue-500 pb-0.5 cursor-pointer"
+                            >
+                                제대로 교육 설계 받아보기 <ArrowRight size={16} className="text-blue-500 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 08: USP Ops
+        const Section08_UspOps = () => {
+             return (
+                <section id="section-08" className="py-24 md:py-32 bg-slate-900 text-white relative">
+                    <div className="max-w-7xl mx-auto px-6 relative z-10">
+                        <div className="mb-16">
+                            <motion.div 
+                                className="text-4xl mb-6 inline-block"
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                🔥
+                            </motion.div>
+                            <motion.h2 
+                                className="text-3xl md:text-5xl font-bold mb-6"
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                            >
+                                플랫폼을 ‘열어주는 것’에서<br/>
+                                끝내지 않습니다
+                            </motion.h2>
+                            <p className="text-slate-400 text-lg md:text-xl">
+                                학습이 안 되는 이유는 사람이 게을러서가 아니라,<br/>
+                                운영 구조가 없기 때문입니다.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                { emoji: "📘", title: "운영 가이드", desc: "초기 세팅부터 학습 구조 점검까지" },
+                                { emoji: "🚩", title: "활성화 캠페인", desc: "참여 유도 챌린지 및 테마 운영" },
+                                { emoji: "🛠", title: "지속 관리", desc: "정기 점검 리포트 및 이슈 대응" }
+                            ].map((item, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    className="bg-slate-800 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors group"
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.2 }}
+                                >
+                                    <div className="text-4xl mb-6 group-hover:scale-110 transition-transform duration-300 inline-block">
+                                        {item.emoji}
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-4">{item.title}</h3>
+                                    <p className="text-slate-400 leading-relaxed">{item.desc}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 09: Data (Animated)
+        const FluctuatingNumber = ({ base, range, isFloat = false, suffix = "" }) => {
+            const [value, setValue] = useState(base);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    const change = (Math.random() - 0.5) * range;
+                    setValue(prev => {
+                        const newValue = base + change;
+                        return isFloat ? Math.round(newValue * 10) / 10 : Math.round(newValue);
+                    });
+                }, 2000); 
+                return () => clearInterval(interval);
+            }, [base, range, isFloat]);
+
+            return (
+                <motion.span
+                    key={value}
+                    initial={{ opacity: 0.8 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1 }}
+                >
+                    {value.toLocaleString()}{suffix}
+                </motion.span>
+            );
+        };
+
+        const BreathingBar = ({ label, heightPercent, color = "bg-blue-500" }) => {
+            const duration = 2 + Math.random() * 2; 
+            return (
+                <div className="flex-1 flex flex-col justify-end group h-full">
+                    <div className="relative flex-1 flex items-end justify-center w-full bg-slate-800/50 rounded-t-sm overflow-hidden">
+                        <motion.div
+                            className={`w-full ${color} opacity-90`}
+                            initial={{ height: `${heightPercent}%` }}
+                            animate={{ 
+                                height: [`${heightPercent}%`, `${heightPercent + 5}%`, `${heightPercent - 3}%`, `${heightPercent}%`] 
+                            }}
+                            transition={{ 
+                                duration: duration, 
+                                repeat: Infinity, 
+                                ease: "easeInOut" 
+                            }}
+                        />
+                    </div>
+                    <span className="text-xs mt-3 text-slate-400 text-center font-medium">{label}</span>
+                </div>
+            );
+        };
+
+        const Section09_Data = () => {
+            return (
+                <section id="section-09" className="py-24 md:py-32 bg-slate-950 text-white relative">
+                    <div className="absolute inset-0 bg-blue-900/5 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:20px_20px] opacity-20"></div>
+
+                    <div className="max-w-6xl mx-auto px-6 relative z-10">
+                        <div className="text-center mb-12">
+                            <motion.div 
+                                className="text-4xl mb-6 inline-block"
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                📊
+                            </motion.div>
+                            <h2 className="text-2xl md:text-3xl md:text-4xl font-bold mb-4">교육 성과는 ‘느낌’이 아니라 ‘확인’입니다</h2>
+                            <p className="text-slate-400 text-sm md:text-base">임원 보고용 요약부터 팀별 비교까지, 데이터로 증명하세요.</p>
+                        </div>
+
+                        {/* Dashboard Frame */}
+                        <motion.div 
+                            className="bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                        >
+                            <div className="flex items-center gap-4 border-b border-slate-800 pb-4 mb-6">
+                                <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
+                                <div className="text-xs text-slate-500">Thinkver Dashboard</div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="col-span-1 space-y-4">
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                        <div className="text-slate-400 text-xs uppercase mb-1">Active Users</div>
+                                        <div className="text-3xl font-bold text-white">
+                                            <FluctuatingNumber base={1248} range={15} />
+                                        </div>
+                                        <div className="text-green-500 text-xs mt-1">▲ 12% Growth</div>
+                                    </div>
+                                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                        <div className="text-slate-400 text-xs uppercase mb-1">Completion</div>
+                                        <div className="text-3xl font-bold text-blue-400">
+                                            <FluctuatingNumber base={88.5} range={1.5} isFloat={true} suffix="%" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-span-1 md:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700 h-64 flex flex-col">
+                                    <div className="flex-1 flex items-end justify-between gap-4 md:gap-8 px-2">
+                                        <BreathingBar label="A팀" heightPercent={85} />
+                                        <BreathingBar label="B팀" heightPercent={45} color="bg-slate-600" />
+                                        <BreathingBar label="C팀" heightPercent={92} />
+                                        <BreathingBar label="D팀" heightPercent={63} color="bg-slate-600" />
+                                        <BreathingBar label="E팀" heightPercent={78} />
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 10: Final Conversion
+        const Section10_Conversion = () => {
+            return (
+                <section id="section-10" className="py-24 md:py-32 bg-white flex flex-col items-center justify-center text-center px-6">
+                    <div className="max-w-2xl">
+                        <div className="mb-8">
+                            <Quote className="inline-block text-blue-200 mb-4" size={48} />
+                            <h2 className="text-2xl md:text-4xl font-bold text-slate-900 leading-tight mb-6">
+                                지금 당장 바꾸지 않아도<br/>
+                                괜찮습니다.
+                            </h2>
+                            <p className="text-base md:text-lg text-slate-600 leading-relaxed">
+                                다만, 현재의 교육 구조가<br/>
+                                회사의 성장 속도를 막고 있는 것은 아닌지<br/>
+                                <strong>한 번은 점검해보셔야 합니다.</strong>
+                            </p>
+                        </div>
+
+                        <div className="space-y-6">
+                             <motion.a 
+                                href={CONSULTATION_LINK}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="bg-slate-900 hover:bg-blue-700 text-white text-base md:text-lg font-bold py-4 px-10 rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 mx-auto max-w-xs md:max-w-md w-full"
+                                animate={{ scale: [1, 1.03, 1] }}
+                                transition={{ 
+                                    duration: 1.5, 
+                                    repeat: Infinity, 
+                                    ease: "easeInOut" 
+                                }}
+                                whileHover={{ scale: 1.05 }}
+                            >
+                                제대로 교육 설계 받아보기 <ArrowRight size={20} />
+                            </motion.a>
+                            
+                            <p className="text-xs text-slate-400">
+                                * 무료 상담 신청 시, 2025 AI 기업교육 가이드북을 함께 드립니다.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // SECTION 11: Brand Story
+        const Section11_BrandStory = () => {
+            return (
+                <section id="section-11" className="py-24 bg-slate-950 text-slate-300 relative overflow-hidden border-t border-slate-900">
+                    <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <div className="text-blue-500 font-bold tracking-widest text-sm mb-6 uppercase">Brand Story</div>
+                            <h2 className="text-3xl md:text-5xl font-bold text-white mb-10">
+                                Think <span className="text-slate-600 font-light mx-2">+</span> Giver
+                            </h2>
+                            <div className="space-y-8">
+                                <motion.p 
+                                    className="text-lg md:text-2xl leading-relaxed font-light text-slate-200"
+                                    animate={{ opacity: [0.6, 1, 0.6] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    AI가 답을 주는 시대,<br/>
+                                    오히려 <strong className="text-white font-bold text-blue-400">‘생각’</strong>의 가치는 더 높아집니다.
+                                </motion.p>
+                                <div className="w-12 h-[1px] bg-slate-800 mx-auto"></div>
+                                <p className="text-base md:text-lg leading-loose text-slate-500 max-w-2xl mx-auto">
+                                    웅진씽크버(Thinkver)는 단순한 지식 전달자가 아닙니다.<br/>
+                                    변화하는 기술 속에서 기업이 나아가야 할 방향을 함께 고민하고,<br/>
+                                    성장을 위한 <span className="text-slate-300 border-b border-blue-500/30 font-medium">올바른 생각(Think)을 드리는(Giver) 파트너</span>입니다.
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
+                    {/* Background decoration */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/5 rounded-full blur-3xl pointer-events-none"></div>
+                </section>
+            );
+        };
+
+        const Footer = () => (
+            <footer className="bg-slate-50 py-12 border-t border-slate-200">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="text-slate-400 text-sm text-center md:text-left">
+                    <span className="font-bold text-slate-600 block mb-2 text-lg">Woongjin Thinkver</span>
+                    <p className="mb-2 text-slate-500 text-xs">
+                        WoongjinThinkver는 웅진씽크빅의 성인 교육 서비스 브랜드입니다.
+                    </p>
+                    &copy; 2026 Woongjin Thinkbig Co., Ltd. All rights reserved.
+                    </div>
+                    <div className="flex gap-6 text-sm text-slate-500">
+                    <a href="#" className="hover:text-slate-900">개인정보처리방침</a>
+                    <a href="#" className="hover:text-slate-900">이용약관</a>
+                    <a href="#" className="hover:text-slate-900">문의하기</a>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        // --------------------------------------------------------
+        // 4. Main App
+        // --------------------------------------------------------
+        const App = () => {
+            return (
+                <div className="relative min-h-screen bg-slate-900 text-slate-50 selection:bg-blue-500 selection:text-white">
+                    <ProgressBar />
+                    <Navbar />
+                    <FloatingNav />
+                    <main>
+                        <Section01_Hero />
+                        <Section02_Question />
+                        <Section03_Reality />
+                        <BreathingSection />
+                        <Section04_Bridge />
+                        <Section05_Identity />
+                        <Section06_UspGlobal />
+                        <Section07_UspCost />
+                        <Section08_UspOps />
+                        <Section09_Data />
+                        <Section10_Conversion />
+                        <Section11_BrandStory />
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
